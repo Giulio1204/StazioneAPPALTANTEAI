@@ -1,0 +1,2076 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AppaltanteAI — Cervello Centrale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   TOKEN DI DESIGN — v2 MVP
+   ══════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F6F9; --surface:#FFFFFF; --surface-2:#FAFBFD; --surface-3:#F0F2F6; --sunken:#EEF1F6;
+  --ink:#0F1729; --ink-2:#4A5670; --ink-3:#8B96AB; --ink-4:#C2C9D6;
+  --line:#E3E7EF; --line-2:#EBEEF3; --line-strong:#D3D9E4;
+  --brand:#1849D6; --brand-2:#123AAE; --brand-3:#0E2F8C; --brand-soft:#EAF0FE; --brand-soft-2:#DCE6FD;
+  --ai:#7C4DDA; --ai-2:#6935C4; --ai-soft:#F3EEFD;
+  --ok:#0B7A4B; --ok-soft:#E7F8EF; --ok-line:#BBEBD1;
+  --warn:#A15C00; --warn-soft:#FFF4E1; --warn-line:#F5D89A;
+  --crit:#B4231E; --crit-soft:#FDEDEC; --crit-line:#F5C4C1;
+  --info:#0A6FA8; --info-soft:#E7F4FC;
+  --radius-sm:6px; --radius:10px; --radius-lg:14px; --radius-xl:18px;
+  --rail-w:76px; --tab-h:60px; --topbar-h:64px; --cervello-w:392px;
+  --shadow-1:0 1px 2px rgba(15,23,41,.05), 0 1px 1px rgba(15,23,41,.03);
+  --shadow-2:0 4px 14px rgba(15,23,41,.08), 0 1px 3px rgba(15,23,41,.06);
+  --shadow-3:0 12px 32px rgba(15,23,41,.14), 0 2px 6px rgba(15,23,41,.06);
+  --ease:cubic-bezier(.3,0,.15,1);
+  --t-fast:.13s var(--ease); --t:.2s var(--ease); --t-slow:.32s var(--ease);
+  --font-display:'Manrope',system-ui,sans-serif;
+  --font-ui:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--ink);min-height:100vh;font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--ink-4);border-radius:20px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-3)}
+::-webkit-scrollbar-track{background:transparent}
+a{color:inherit}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.ic{width:18px;height:18px;display:block;flex-shrink:0}
+.mono{font-family:var(--font-mono)}
+.app{display:flex;min-height:100vh}
+
+/* ---- RAIL ---- */
+.rail{width:var(--rail-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:16px 0 14px;position:fixed;inset:0 auto 0 0;z-index:210}
+.rail-mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(155deg,var(--brand),var(--brand-3));display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:var(--shadow-2);margin-bottom:22px;flex-shrink:0}
+.rail-mark .ic{width:21px;height:21px}
+.rail-nav{display:flex;flex-direction:column;gap:4px;align-items:center;flex:1;width:100%}
+.rail-item{width:52px;height:52px;border-radius:var(--radius);display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;color:var(--ink-3);border:1px solid transparent;transition:all var(--t-fast);position:relative;background:none}
+.rail-item .ic{width:19px;height:19px}
+.rail-item span{font-size:.55rem;font-weight:600;letter-spacing:.1px}
+.rail-item:hover{background:var(--surface-3);color:var(--ink-2)}
+.rail-item.active{background:var(--brand-soft);color:var(--brand)}
+.rail-item.active::before{content:'';position:absolute;left:-16px;top:50%;transform:translateY(-50%);width:3px;height:22px;border-radius:0 3px 3px 0;background:var(--brand)}
+.rail-dot{position:absolute;top:7px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--crit);border:1.5px solid var(--surface)}
+.rail-foot{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
+.rail-ava{width:34px;height:34px;border-radius:9px;background:linear-gradient(155deg,var(--ai),var(--ai-2));color:#fff;font-weight:800;font-size:.68rem;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.25);cursor:pointer}
+
+/* ---- MAIN / TOPBAR ---- */
+.main{margin-left:var(--rail-w);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0;transition:margin-right var(--t-slow)}
+.main.shift{margin-right:var(--cervello-w)}
+.topbar{height:var(--topbar-h);background:rgba(244,246,249,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 22px;position:sticky;top:0;z-index:120;flex-shrink:0}
+.tb-title-wrap{min-width:0}
+.tb-title{font-family:var(--font-display);font-size:1.05rem;font-weight:800;color:var(--ink);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-sub{font-size:.7rem;color:var(--ink-3);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-spacer{flex:1}
+.tb-ask{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius);padding:8px 12px 8px 13px;cursor:pointer;transition:all var(--t-fast);width:308px;flex-shrink:0;color:var(--ink-3);box-shadow:var(--shadow-1)}
+.tb-ask:hover{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.tb-ask .ic{width:15px;height:15px}
+.tb-ask span{flex:1;font-size:.75rem;font-weight:500;text-align:left}
+.tb-ask kbd{font-family:var(--font-mono);font-size:.6rem;color:var(--ink-3);background:var(--surface-3);border:1px solid var(--line);border-radius:4px;padding:1.5px 5px}
+.tb-acts{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tb-btn{width:34px;height:34px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--ink-2);position:relative;transition:all var(--t-fast)}
+.tb-btn:hover{border-color:var(--line-strong);background:var(--surface-3)}
+.tb-btn .ic{width:17px;height:17px}
+.tb-badge{position:absolute;top:-4px;right:-4px;background:var(--crit);color:#fff;font-size:.53rem;font-weight:800;border-radius:20px;padding:1px 4.5px;min-width:15px;text-align:center;line-height:1.5;border:1.5px solid var(--surface)}
+.tb-badge.hide{display:none}
+.tb-cervello-btn{display:flex;align-items:center;gap:7px;background:var(--ink);color:#fff;border:none;border-radius:var(--radius);padding:0 13px;height:34px;font-size:.74rem;font-weight:700;transition:all var(--t-fast);letter-spacing:-.1px}
+.tb-cervello-btn:hover{background:var(--brand-3)}
+.tb-cervello-btn.on{background:var(--brand)}
+.cervello-pulse{width:6px;height:6px;border-radius:50%;background:#5FF0A8;box-shadow:0 0 0 0 rgba(95,240,168,.6);animation:pulse-ring 2s infinite}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(95,240,168,.55)}70%{box-shadow:0 0 0 6px rgba(95,240,168,0)}100%{box-shadow:0 0 0 0 rgba(95,240,168,0)}}
+
+/* ---- NOTIFICHE (dropdown) ---- */
+.notif-panel{position:fixed;top:calc(var(--topbar-h) + 6px);right:70px;width:360px;max-height:65vh;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-3);z-index:260;display:none;flex-direction:column;overflow:hidden}
+.notif-panel.open{display:flex}
+.notif-head{padding:13px 16px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;justify-content:space-between}
+.notif-title{font-size:.78rem;font-weight:800}
+.notif-clear{font-size:.66rem;font-weight:700;color:var(--brand);background:none;border:none}
+.notif-list{overflow-y:auto;padding:4px 0}
+.notif-item{display:flex;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line-2);cursor:pointer;transition:background var(--t-fast)}
+.notif-item:hover{background:var(--surface-2)}
+.notif-item:last-child{border:none}
+.notif-item.unread{background:var(--brand-soft)}
+.notif-item.unread:hover{background:var(--brand-soft-2)}
+.notif-ic{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notif-ic .ic{width:14px;height:14px}
+.notif-txt{font-size:.72rem;color:var(--ink-2);line-height:1.45}
+.notif-txt b{color:var(--ink);font-weight:700}
+.notif-time{font-size:.6rem;color:var(--ink-3);margin-top:2px}
+.notif-empty{padding:26px 16px;text-align:center;color:var(--ink-3);font-size:.73rem}
+
+/* ---- ALERTLINE ---- */
+.alertline{display:none;align-items:center;gap:10px;padding:8px 22px;background:var(--crit-soft);border-bottom:1px solid var(--crit-line);font-size:.73rem;color:var(--crit);font-weight:600;flex-shrink:0}
+.alertline.show{display:flex}
+.alertline .ic{width:15px;height:15px;flex-shrink:0}
+.alertline b{font-weight:800}
+.alertline-link{margin-left:auto;color:var(--crit);text-decoration:underline;font-weight:700;flex-shrink:0;background:none;border:none;font-size:.73rem}
+
+.view{flex:1;padding:24px 28px 60px;max-width:1240px;width:100%}
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.view-h1{font-family:var(--font-display);font-size:1.5rem;font-weight:800;letter-spacing:-.5px}
+.view-p{color:var(--ink-3);font-size:.82rem;margin-top:3px;font-weight:500;max-width:560px}
+
+/* ---- COMPONENTI ---- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-1)}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:var(--radius-sm);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);font-size:.73rem;font-weight:700;padding:7px 12px;transition:all var(--t-fast)}
+.btn:hover{border-color:var(--ink-4);background:var(--surface-3)}
+.btn .ic{width:14px;height:14px}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-2);border-color:var(--brand-2)}
+.btn-ai{background:var(--ai-soft);border-color:#E1D3FA;color:var(--ai-2)}
+.btn-ai:hover{background:#EBE0FB}
+.btn-ghost{border-color:transparent;background:none}
+.btn-ghost:hover{background:var(--surface-3)}
+.btn-sm{padding:5px 9px;font-size:.68rem}
+.btn-ok{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.63rem;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid transparent;white-space:nowrap;letter-spacing:.1px}
+.chip-ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok-line)}
+.chip-warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-line)}
+.chip-crit{background:var(--crit-soft);color:var(--crit);border-color:var(--crit-line)}
+.chip-info{background:var(--info-soft);color:var(--info);border-color:#BFE1F3}
+.chip-ai{background:var(--ai-soft);color:var(--ai-2);border-color:#E1D3FA}
+.chip-neutral{background:var(--surface-3);color:var(--ink-2);border-color:var(--line)}
+.chip-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.filterbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.fchip{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;padding:6px 12px;border-radius:20px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);transition:all var(--t-fast)}
+.fchip:hover{border-color:var(--ink-4)}
+.fchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.searchbox{display:flex;align-items:center;gap:8px;border:1px solid var(--line-strong);background:var(--surface);border-radius:20px;padding:6px 12px;flex:1;min-width:180px;max-width:280px}
+.searchbox .ic{width:14px;height:14px;color:var(--ink-3)}
+.searchbox input{border:none;outline:none;background:none;font-size:.75rem;flex:1;font-family:inherit;color:var(--ink)}
+.searchbox input::placeholder{color:var(--ink-3)}
+.gauge{display:flex;flex-direction:column;gap:4px}
+.gauge-top{display:flex;justify-content:space-between;align-items:baseline}
+.gauge-lbl{font-size:.62rem;color:var(--ink-3);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.gauge-val{font-size:.68rem;font-weight:800;color:var(--ink-2)}
+.gauge-track{height:5px;border-radius:20px;background:var(--sunken);overflow:hidden}
+.gauge-fill{height:100%;border-radius:20px;transition:width .7s var(--ease)}
+
+/* ---- OGGI ---- */
+.oggi-hero{background:linear-gradient(120deg,var(--ink) 0%,#1B2A55 60%,var(--brand-3) 130%);border-radius:var(--radius-xl);padding:24px 26px;color:#fff;margin-bottom:20px;position:relative;overflow:hidden}
+.oggi-hero::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 82% 20%,rgba(124,77,218,.35),transparent 55%);pointer-events:none}
+.oggi-hero-top{display:flex;align-items:center;justify-content:space-between;gap:14px;position:relative;flex-wrap:wrap}
+.oggi-greet{font-family:var(--font-display);font-size:1.32rem;font-weight:800;letter-spacing:-.4px}
+.oggi-date{font-size:.73rem;color:rgba(255,255,255,.6);margin-top:3px;font-weight:500;text-transform:capitalize}
+.oggi-stats{display:flex;gap:26px;margin-top:18px;position:relative;flex-wrap:wrap}
+.oggi-stat b{font-family:var(--font-display);font-size:1.5rem;font-weight:800;display:block;line-height:1}
+.oggi-stat span{font-size:.65rem;color:rgba(255,255,255,.55);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:5px;display:block}
+.oggi-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.feed-group{margin-bottom:22px}
+.feed-group:last-child{margin-bottom:0}
+.feed-group-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.feed-group-h .ic{width:15px;height:15px;color:var(--ink-3)}
+.feed-group-title{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--ink-2)}
+.feed-group-count{font-size:.64rem;color:var(--ink-3);font-weight:700;background:var(--surface-3);border-radius:20px;padding:1px 7px}
+.feed-list{display:flex;flex-direction:column;gap:10px}
+.fcard{padding:15px 16px;transition:box-shadow var(--t-fast),border-color var(--t-fast),opacity .3s,transform .3s}
+.fcard:hover{box-shadow:var(--shadow-2);border-color:var(--line-strong)}
+.fcard.resolving{opacity:0;transform:translateX(14px)}
+.fcard.risolto{opacity:.62}
+.fcard.risolto .fcard-title{text-decoration:line-through;text-decoration-color:var(--ink-4)}
+.fcard-top{display:flex;align-items:flex-start;gap:11px}
+.fcard-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid transparent}
+.fcard-ic .ic{width:16px;height:16px}
+.fcard-body{flex:1;min-width:0}
+.fcard-headline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+.fcard-title{font-size:.83rem;font-weight:700;letter-spacing:-.1px}
+.fcard-desc{font-size:.75rem;color:var(--ink-2);line-height:1.55}
+.fcard-meta{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+.fcard-proj{font-size:.66rem;color:var(--brand);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.fcard-proj:hover{text-decoration:underline}
+.fcard-proj .ic{width:12px;height:12px}
+.fcard-actions{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+.why-toggle{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:700;color:var(--ai-2);background:none;border:none;padding:0;margin-top:9px}
+.why-toggle .ic{width:11px;height:11px;transition:transform var(--t-fast)}
+.why-toggle.open .ic:last-child{transform:rotate(90deg)}
+.why-body{display:none;margin-top:8px;padding:11px 12px;background:var(--ai-soft);border:1px solid #E1D3FA;border-radius:var(--radius-sm);font-size:.71rem;color:#3E2377;line-height:1.6}
+.why-body.open{display:block}
+.cite-chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:.61rem;font-weight:600;background:#fff;border:1px solid #E1D3FA;color:var(--ai-2);padding:2px 7px;border-radius:5px;margin-top:6px}
+.cite-chip .ic{width:11px;height:11px}
+.side-card{padding:16px}
+.side-card + .side-card{margin-top:16px}
+.side-card-h{display:flex;align-items:center;gap:7px;margin-bottom:12px}
+.side-card-h .ic{width:14px;height:14px;color:var(--ink-3)}
+.side-card-title{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-2)}
+.mini-scad{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line-2);cursor:pointer}
+.mini-scad:last-child{border:none;padding-bottom:0}
+.mini-scad-pill{font-family:var(--font-mono);font-size:.66rem;font-weight:800;border-radius:6px;padding:4px 6px;min-width:30px;text-align:center;flex-shrink:0}
+.mini-scad-txt{font-size:.72rem;font-weight:600;line-height:1.35}
+.mini-scad-sub{font-size:.63rem;color:var(--ink-3);margin-top:1px}
+.agent-mini{display:flex;align-items:center;gap:9px;padding:7px 0;cursor:pointer;border-radius:6px}
+.agent-mini:hover{background:var(--surface-2)}
+.agent-mini-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.agent-mini-name{font-size:.72rem;font-weight:700;flex:1}
+.agent-mini-n{font-size:.64rem;color:var(--ink-3);font-weight:700}
+.live-feed{max-height:230px;overflow-y:auto}
+.live-row{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--line-2);animation:live-in .35s var(--ease)}
+.live-row:last-child{border:none}
+@keyframes live-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.live-dot{width:6px;height:6px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.live-txt{font-size:.68rem;color:var(--ink-2);line-height:1.45;flex:1}
+.live-txt b{color:var(--ink);font-weight:700}
+.live-time{font-size:.58rem;color:var(--ink-3);flex-shrink:0;margin-top:2px}
+
+/* ---- PROGETTI ---- */
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.pcard{padding:17px 18px;cursor:pointer;transition:all var(--t-fast)}
+.pcard:hover{box-shadow:var(--shadow-2);border-color:var(--line-strong);transform:translateY(-1px)}
+.pcard-prog{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:2px 0}
+.pcard-title{font-size:.87rem;font-weight:700;line-height:1.35;margin:4px 0 5px}
+.pcard-cig{font-family:var(--font-mono);font-size:.65rem;color:var(--ink-3)}
+.pcard-fase{margin:11px 0 13px}
+.pcard-gauges{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px;margin-bottom:12px}
+.pcard-foot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--line-2)}
+.pcard-scad{font-size:.65rem;color:var(--ink-2);font-weight:600;display:flex;align-items:center;gap:5px}
+.pcard-scad .ic{width:12px;height:12px;color:var(--ink-3)}
+.pcard-rischio{display:flex;align-items:center;gap:5px}
+.risk-dot{width:8px;height:8px;border-radius:50%}
+
+/* ---- DETTAGLIO PROGETTO ---- */
+.pd-back{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;color:var(--ink-3);background:none;border:none;margin-bottom:14px}
+.pd-back:hover{color:var(--ink)}
+.pd-back .ic{width:13px;height:13px;transform:rotate(180deg)}
+.pd-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px}
+.pd-title{font-family:var(--font-display);font-size:1.35rem;font-weight:800;letter-spacing:-.4px;max-width:560px}
+.pd-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px}
+.pd-meta-item{font-size:.72rem;color:var(--ink-2)}
+.pd-meta-item b{color:var(--ink);font-weight:700}
+.twin-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px}
+.twin-cell{padding:13px 14px}
+.phase-rail{margin-bottom:24px;overflow-x:auto;padding-bottom:6px}
+.phase-track{display:flex;align-items:flex-start;min-width:max-content;position:relative;padding:0 4px}
+.phase-node{display:flex;flex-direction:column;align-items:center;width:104px;flex-shrink:0;position:relative;cursor:pointer}
+.phase-line{position:absolute;top:15px;left:-52px;width:104px;height:2px;background:var(--line-strong);z-index:0}
+.phase-node:first-child .phase-line{display:none}
+.phase-line.done{background:var(--ok)}
+.phase-dot{width:30px;height:30px;border-radius:50%;background:var(--surface);border:2px solid var(--line-strong);display:flex;align-items:center;justify-content:center;z-index:1;font-size:.68rem;font-weight:800;color:var(--ink-3)}
+.phase-dot .ic{width:14px;height:14px}
+.phase-node.done .phase-dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.phase-node.current .phase-dot{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 0 0 5px var(--brand-soft)}
+.phase-lbl{font-size:.63rem;font-weight:700;color:var(--ink-3);text-align:center;margin-top:8px;line-height:1.3;padding:0 2px}
+.phase-node.current .phase-lbl{color:var(--brand)}
+.phase-node.done .phase-lbl{color:var(--ink-2)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.tab-btn{padding:9px 4px;margin-right:20px;font-size:.75rem;font-weight:700;color:var(--ink-3);background:none;border:none;border-bottom:2px solid transparent;transition:all var(--t-fast);white-space:nowrap}
+.tab-btn:hover{color:var(--ink-2)}
+.tab-btn.active{color:var(--brand);border-bottom-color:var(--brand)}
+.tabpanel{display:none}
+.tabpanel.active{display:block}
+.doc-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line-2)}
+.doc-row:last-child{border:none}
+.doc-ic{width:32px;height:32px;border-radius:8px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--ink-3)}
+.doc-ic .ic{width:15px;height:15px}
+.doc-name{font-size:.76rem;font-weight:700}
+.doc-sub{font-size:.64rem;color:var(--ink-3);margin-top:1px}
+.doc-status{margin-left:auto;flex-shrink:0;display:flex;gap:7px;align-items:center}
+.log-row{display:flex;gap:11px;padding:10px 0}
+.log-dot{width:7px;height:7px;border-radius:50%;background:var(--ink-4);margin-top:6px;flex-shrink:0}
+.log-txt{font-size:.75rem;color:var(--ink-2)}
+.log-txt b{color:var(--ink);font-weight:700}
+.log-time{font-size:.63rem;color:var(--ink-3);margin-top:2px}
+.sal-table{width:100%;border-collapse:collapse;font-size:.74rem}
+.sal-table th{text-align:left;font-size:.62rem;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-3);font-weight:800;padding:0 10px 8px;border-bottom:1px solid var(--line)}
+.sal-table td{padding:11px 10px;border-bottom:1px solid var(--line-2);color:var(--ink-2)}
+.sal-table td:first-child,.sal-table th:first-child{padding-left:0}
+.sal-table b{color:var(--ink);font-weight:700}
+
+/* ---- PROGRAMMI / KNOWLEDGE ---- */
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.progcard{padding:18px;cursor:pointer;transition:all var(--t-fast)}
+.progcard:hover{box-shadow:var(--shadow-2);border-color:var(--line-strong)}
+.progcard-badge{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:.72rem;color:#fff;margin-bottom:12px}
+.progcard-name{font-size:.9rem;font-weight:800}
+.progcard-full{font-size:.68rem;color:var(--ink-3);margin-top:2px;line-height:1.4}
+.progcard-stats{display:flex;gap:16px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line-2)}
+.progcard-stat b{font-family:var(--font-display);font-size:1.05rem;font-weight:800;display:block}
+.progcard-stat span{font-size:.6rem;color:var(--ink-3);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.pipeline{display:flex;align-items:center;gap:6px;margin-top:10px}
+.pipeline-step{flex:1;height:4px;border-radius:20px;background:var(--sunken);transition:background .35s}
+.pipeline-step.on{background:var(--ok)}
+.pipeline-step.working{background:var(--warn);animation:blinkp 0.9s infinite}
+@keyframes blinkp{50%{opacity:.35}}
+.kdoc-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line-2)}
+.kdoc-row:last-child{border:none}
+.kdoc-ic{width:34px;height:34px;border-radius:8px;background:var(--ai-soft);color:var(--ai-2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kdoc-ic .ic{width:16px;height:16px}
+.kdoc-name{font-size:.77rem;font-weight:700}
+.kdoc-sub{font-size:.64rem;color:var(--ink-3);margin-top:2px}
+.kdoc-pipeline{margin-left:auto;flex-shrink:0;width:170px}
+.kdoc-pipeline-lbl{font-size:.6rem;color:var(--ink-3);margin-top:4px;text-align:right}
+.dropzone{border:1.5px dashed var(--line-strong);border-radius:var(--radius-lg);background:var(--surface-2);padding:26px 20px;text-align:center;transition:all var(--t-fast);cursor:pointer;margin-bottom:16px}
+.dropzone:hover,.dropzone.over{border-color:var(--ai);background:var(--ai-soft)}
+.dropzone .ic{width:26px;height:26px;color:var(--ai-2);margin:0 auto 8px}
+.dz-title{font-size:.8rem;font-weight:700}
+.dz-sub{font-size:.68rem;color:var(--ink-3);margin-top:3px}
+.rules-flash{display:inline-flex;align-items:center;gap:5px;font-size:.66rem;font-weight:800;color:var(--ok);animation:live-in .4s var(--ease)}
+
+/* ---- AGENTI ---- */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.agentcard{padding:18px;transition:box-shadow var(--t-fast)}
+.agentcard:hover{box-shadow:var(--shadow-2)}
+.agentcard-top{display:flex;gap:12px;align-items:flex-start}
+.agentcard-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.agentcard-ic .ic{width:18px;height:18px}
+.agentcard-ic.running::after{content:'';position:absolute;inset:-3px;border-radius:12px;border:2px solid currentColor;opacity:.4;animation:pulse-run 1s infinite}
+@keyframes pulse-run{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.18);opacity:0}}
+.agentcard-name{font-size:.85rem;font-weight:800;display:flex;align-items:center;gap:7px}
+.agentcard-role{font-size:.71rem;color:var(--ink-3);margin-top:2px;line-height:1.4}
+.agentcard-status-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex-shrink:0}
+.agentcard-status-dot.busy{background:var(--warn);animation:blinkp 0.8s infinite}
+.agentcard-stats{display:flex;gap:18px;margin:14px 0}
+.agentcard-stat b{font-family:var(--font-display);font-size:1.15rem;font-weight:800;display:block;line-height:1}
+.agentcard-stat span{font-size:.6rem;color:var(--ink-3);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.agentcard-log{border-top:1px solid var(--line-2);padding-top:10px;max-height:0;overflow:hidden;transition:max-height .3s var(--ease)}
+.agentcard-log.open{max-height:280px;overflow-y:auto}
+.agent-log-row{display:flex;gap:8px;padding:5px 0;font-size:.68rem;color:var(--ink-2);line-height:1.45}
+.agent-log-time{font-family:var(--font-mono);font-size:.6rem;color:var(--ink-3);flex-shrink:0;margin-top:2px;width:38px}
+.agentcard-foot{display:flex;gap:8px;margin-top:12px}
+
+/* ---- CERVELLO ---- */
+.cervello{position:fixed;top:0;right:0;bottom:0;width:var(--cervello-w);background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;z-index:250;transform:translateX(100%);transition:transform var(--t-slow);box-shadow:-8px 0 32px rgba(15,23,41,.08)}
+.cervello.open{transform:translateX(0)}
+.cerv-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px;flex-shrink:0}
+.cerv-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(155deg,var(--ai),var(--ai-2));display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.cerv-mark .ic{width:17px;height:17px}
+.cerv-title{font-family:var(--font-display);font-size:.9rem;font-weight:800}
+.cerv-status{display:flex;align-items:center;gap:5px;font-size:.65rem;color:var(--ok);font-weight:700;margin-top:1px}
+.cerv-close{margin-left:auto;width:28px;height:28px;border-radius:8px;border:none;background:none;color:var(--ink-3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cerv-close:hover{background:var(--surface-3);color:var(--ink)}
+.cerv-close .ic{width:16px;height:16px}
+.cerv-context{padding:10px 18px;border-bottom:1px solid var(--line-2);background:var(--surface-2);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.cerv-context .ic{width:13px;height:13px;color:var(--ink-3);flex-shrink:0}
+.cerv-context-txt{font-size:.66rem;color:var(--ink-2);font-weight:600}
+.cerv-context-txt b{color:var(--ink)}
+.cerv-thread{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:16px}
+.cmsg{display:flex;gap:10px;max-width:100%}
+.cmsg-ai .cmsg-bubble{background:var(--surface-2);border:1px solid var(--line-2);border-radius:2px 12px 12px 12px}
+.cmsg-user{flex-direction:row-reverse}
+.cmsg-user .cmsg-bubble{background:var(--brand);color:#fff;border-radius:12px 2px 12px 12px}
+.cmsg-ava{width:24px;height:24px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.cmsg-ava.ai{background:var(--ai-soft);color:var(--ai-2)}
+.cmsg-ava.user{background:var(--ink);color:#fff;font-size:.55rem;font-weight:800}
+.cmsg-ava .ic{width:13px;height:13px}
+.cmsg-bubble{padding:10px 13px;font-size:.75rem;line-height:1.55}
+.cmsg-bubble p+p{margin-top:8px}
+.cmsg-cites{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.cmsg-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.cerv-suggest{padding:0 18px 12px;flex-shrink:0}
+.cerv-suggest-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.cerv-sugg-btn{flex-shrink:0;font-size:.66rem;font-weight:600;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:6px 11px;white-space:nowrap}
+.cerv-sugg-btn:hover{border-color:var(--ink-4);background:var(--surface-3)}
+.cerv-input-wrap{padding:14px 18px 18px;border-top:1px solid var(--line);flex-shrink:0}
+.cerv-input-box{display:flex;align-items:flex-end;gap:8px;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--radius);padding:8px 8px 8px 13px}
+.cerv-input-box:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.cerv-input-box textarea{flex:1;border:none;outline:none;background:none;resize:none;font-family:inherit;font-size:.78rem;line-height:1.4;max-height:90px;color:var(--ink)}
+.cerv-input-box textarea::placeholder{color:var(--ink-3)}
+.cerv-send{width:30px;height:30px;border-radius:8px;background:var(--ink);color:#fff;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--t-fast)}
+.cerv-send:hover{background:var(--brand)}
+.cerv-send .ic{width:14px;height:14px}
+.cerv-typing{display:flex;gap:4px;padding:11px 13px}
+.cerv-typing span{width:6px;height:6px;border-radius:50%;background:var(--ink-4);animation:typing 1.1s infinite}
+.cerv-typing span:nth-child(2){animation-delay:.15s}
+.cerv-typing span:nth-child(3){animation-delay:.3s}
+@keyframes typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}
+.cervello-scrim{display:none;position:fixed;inset:0;background:rgba(15,23,41,.35);z-index:240;backdrop-filter:blur(1px)}
+.cervello-scrim.show{display:block}
+
+/* ---- MODALE ---- */
+.modal-scrim{position:fixed;inset:0;background:rgba(15,23,41,.45);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.modal-scrim.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow-3);width:100%;max-width:640px;max-height:88vh;display:flex;flex-direction:column;animation:modal-in .22s var(--ease)}
+.modal.wide{max-width:780px}
+@keyframes modal-in{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.modal-title{font-family:var(--font-display);font-size:.95rem;font-weight:800;flex:1}
+.modal-x{width:28px;height:28px;border-radius:8px;border:none;background:none;color:var(--ink-3);display:flex;align-items:center;justify-content:center}
+.modal-x:hover{background:var(--surface-3);color:var(--ink)}
+.modal-x .ic{width:15px;height:15px}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--line-2);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.atto-paper{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;font-size:.76rem;line-height:1.7;color:var(--ink-2);white-space:pre-wrap;font-family:Georgia,'Times New Roman',serif;max-height:340px;overflow-y:auto}
+.atto-paper h4{font-size:.82rem;color:var(--ink);text-align:center;margin-bottom:12px;font-family:inherit}
+.diff-block{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.diff-lbl{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:7px 13px}
+.diff-old .diff-lbl{background:var(--crit-soft);color:var(--crit)}
+.diff-new .diff-lbl{background:var(--ok-soft);color:var(--ok)}
+.diff-txt{padding:11px 13px;font-size:.74rem;line-height:1.6;color:var(--ink-2)}
+.diff-old .diff-txt del{background:#FBDBD9;text-decoration:line-through;text-decoration-color:var(--crit);padding:0 2px;border-radius:3px}
+.diff-new .diff-txt mark{background:#C9F2DC;padding:0 2px;border-radius:3px;color:var(--ink)}
+.form-row{margin-bottom:14px}
+.form-lbl{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-2);display:block;margin-bottom:6px}
+.form-input,.form-select,.form-textarea{width:100%;border:1px solid var(--line-strong);border-radius:var(--radius-sm);padding:9px 12px;font-family:inherit;font-size:.78rem;color:var(--ink);background:var(--surface);outline:none;transition:all var(--t-fast)}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.form-textarea{resize:vertical;min-height:90px;line-height:1.55}
+.check-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:all var(--t-fast)}
+.check-row:hover{border-color:var(--line-strong);background:var(--surface-2)}
+.check-row.checked{border-color:var(--brand);background:var(--brand-soft)}
+.check-row input{accent-color:var(--brand);width:15px;height:15px;flex-shrink:0}
+.check-name{font-size:.77rem;font-weight:700;flex:1}
+.check-sub{font-size:.64rem;color:var(--ink-3)}
+.check-result{font-size:.64rem;font-weight:700;flex-shrink:0}
+.wizard-steps{display:flex;gap:6px;margin-bottom:18px}
+.wizard-step{flex:1;height:4px;border-radius:20px;background:var(--sunken)}
+.wizard-step.on{background:var(--brand)}
+.scan-box{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface-2);margin-bottom:8px}
+.scan-spinner{width:22px;height:22px;border:2.5px solid var(--line-strong);border-top-color:var(--ai);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-txt{font-size:.74rem;color:var(--ink-2);flex:1}
+.progressbar{height:6px;border-radius:20px;background:var(--sunken);overflow:hidden;margin-top:8px}
+.progressbar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--ai),var(--brand));transition:width .4s var(--ease)}
+
+/* ---- TOAST ---- */
+#toast-host{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;gap:8px;align-items:center}
+.toast{background:var(--ink);color:#fff;font-size:.76rem;font-weight:600;padding:10px 16px;border-radius:var(--radius);box-shadow:var(--shadow-3);display:flex;align-items:center;gap:8px;animation:toast-in .25s var(--ease);max-width:88vw}
+.toast .ic{width:14px;height:14px;flex-shrink:0}
+.toast.ok .ic{color:#5FF0A8}
+.toast.err .ic{color:#FF9B94}
+.toast.ai .ic{color:#C9AFF5}
+@keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---- MOBILE ---- */
+.tabbar{display:none}
+.fab-cervello{display:none}
+@media (max-width: 980px){
+  .rail{display:none}
+  .main{margin-left:0}
+  .main.shift{margin-right:0}
+  .tb-ask{width:auto;flex:1}
+  .tb-ask span{display:none}
+  .view{padding:16px 14px 90px}
+  .oggi-grid{grid-template-columns:1fr}
+  .twin-row{grid-template-columns:repeat(3,1fr)}
+  .proj-grid,.prog-grid,.agent-grid{grid-template-columns:1fr}
+  .notif-panel{right:10px;left:10px;width:auto}
+  .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;height:var(--tab-h);background:var(--surface);border-top:1px solid var(--line);z-index:210;align-items:center;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom)}
+  .tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--ink-3);padding:6px 10px}
+  .tab-item .ic{width:19px;height:19px}
+  .tab-item span{font-size:.58rem;font-weight:700}
+  .tab-item.active{color:var(--brand)}
+  .fab-cervello{display:flex;position:fixed;bottom:76px;right:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(155deg,var(--ai),var(--ai-2));color:#fff;border:none;align-items:center;justify-content:center;box-shadow:var(--shadow-3);z-index:215}
+  .fab-cervello .ic{width:22px;height:22px}
+  .cervello{width:100%;border-left:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <nav class="rail" id="rail">
+    <div class="rail-mark" title="AppaltanteAI" id="railMark"></div>
+    <div class="rail-nav" id="railNav"></div>
+    <div class="rail-foot">
+      <button class="rail-item" id="railSettings" title="Impostazioni"></button>
+      <div class="rail-ava" title="Elena Ferraro — RUP">EF</div>
+    </div>
+  </nav>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="tb-title-wrap">
+        <div class="tb-title" id="tbTitle">Oggi</div>
+        <div class="tb-sub" id="tbSub">Il tuo contesto di lavoro, non un menu</div>
+      </div>
+      <div class="tb-spacer"></div>
+      <button class="tb-ask" id="tbAsk"></button>
+      <div class="tb-acts">
+        <button class="tb-btn" id="tbBell" title="Notifiche"></button>
+        <button class="tb-cervello-btn" id="tbCervelloBtn"><span class="cervello-pulse"></span>Cervello</button>
+      </div>
+    </header>
+
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-head">
+        <span class="notif-title">Notifiche degli Agenti</span>
+        <button class="notif-clear" id="notifClear">Segna tutte come lette</button>
+      </div>
+      <div class="notif-list" id="notifList"></div>
+    </div>
+
+    <div class="alertline" id="alertline">
+      <span id="alertlineIco"></span>
+      <span id="alertlineTxt">—</span>
+      <button class="alertline-link" id="alertlineBtn">Apri</button>
+    </div>
+
+    <main class="view" id="view"></main>
+  </div>
+
+  <aside class="cervello" id="cervello">
+    <div class="cerv-head">
+      <div class="cerv-mark" id="cervMark"></div>
+      <div>
+        <div class="cerv-title">Il Cervello</div>
+        <div class="cerv-status"><span class="chip-dot" style="color:var(--ok)"></span> <span id="cervStatusTxt">Sincronizzato</span></div>
+      </div>
+      <button class="cerv-close" id="cervClose"></button>
+    </div>
+    <div class="cerv-context" id="cervContext">
+      <span id="cervContextIco"></span>
+      <div class="cerv-context-txt">Contesto: <b id="cervContextName">Centro Operativo</b></div>
+    </div>
+    <div class="cerv-thread" id="cervThread"></div>
+    <div class="cerv-suggest"><div class="cerv-suggest-row" id="cervSuggestRow"></div></div>
+    <div class="cerv-input-wrap">
+      <div class="cerv-input-box">
+        <textarea id="cervInput" rows="1" placeholder="Fai una domanda al Cervello…"></textarea>
+        <button class="cerv-send" id="cervSend"></button>
+      </div>
+    </div>
+  </aside>
+  <div class="cervello-scrim" id="cervelloScrim"></div>
+
+</div>
+
+<nav class="tabbar" id="tabbar"></nav>
+<button class="fab-cervello" id="fabCervello"></button>
+
+<div class="modal-scrim" id="modalScrim">
+  <div class="modal" id="modalBox">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">—</div>
+      <button class="modal-x" id="modalX"></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt,.md,.xlsx,.csv" style="display:none"/>
+
+<div id="toast-host"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   APPALTANTE AI — v0.9 MVP
+   Agenti attivi · Azioni funzionanti · Knowledge upload · Persistenza
+   ════════════════════════════════════════════════════════════════ */
+
+/* ---------- ICONE ---------- */
+const ICONP = {
+  today:'<rect x="3" y="3" width="18" height="18" rx="4"></rect><polyline points="7,8 8.5,9.5 11,6.5"></polyline><line x1="13" y1="8" x2="18" y2="8"></line><polyline points="7,14 8.5,15.5 11,12.5"></polyline><line x1="13" y1="14" x2="18" y2="14"></line>',
+  folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path>',
+  book:'<path d="M4 5.7c0-.9.7-1.7 1.7-1.7H12v16H5.7A1.7 1.7 0 0 1 4 18.3V5.7z"></path><path d="M20 5.7c0-.9-.7-1.7-1.7-1.7H12v16h6.3c.9 0 1.7-.7 1.7-1.7V5.7z"></path>',
+  network:'<circle cx="6" cy="6.5" r="2.3"></circle><circle cx="18" cy="6.5" r="2.3"></circle><circle cx="12" cy="18" r="2.3"></circle><line x1="7.9" y1="7.7" x2="10.2" y2="16"></line><line x1="16.1" y1="7.7" x2="13.8" y2="16"></line><line x1="8.3" y1="6.5" x2="15.7" y2="6.5"></line>',
+  archive:'<rect x="3" y="4" width="18" height="4" rx="1"></rect><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"></path><line x1="10" y1="12.5" x2="14" y2="12.5"></line>',
+  settings:'<circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2.5" x2="12" y2="5.5"></line><line x1="12" y1="18.5" x2="12" y2="21.5"></line><line x1="2.5" y1="12" x2="5.5" y2="12"></line><line x1="18.5" y1="12" x2="21.5" y2="12"></line><line x1="5.3" y1="5.3" x2="7.4" y2="7.4"></line><line x1="16.6" y1="16.6" x2="18.7" y2="18.7"></line><line x1="5.3" y1="18.7" x2="7.4" y2="16.6"></line><line x1="16.6" y1="7.4" x2="18.7" y2="5.3"></line>',
+  chevronRight:'<polyline points="9,5 16,12 9,19"></polyline>',
+  x:'<line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line>',
+  check:'<polyline points="5,13 10,18 19,7"></polyline>',
+  arrowRight:'<line x1="4" y1="12" x2="18" y2="12"></line><polyline points="12,6 18,12 12,18"></polyline>',
+  alert:'<path d="M12 4 L21 20 H3 Z"></path><line x1="12" y1="10" x2="12" y2="15"></line><circle cx="12" cy="17.6" r=".9" fill="currentColor" stroke="none"></circle>',
+  clock:'<circle cx="12" cy="12" r="8.4"></circle><polyline points="12,7.4 12,12 15.4,14"></polyline>',
+  file:'<path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"></path><polyline points="14,3 14,7 18,7"></polyline>',
+  shield:'<path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z"></path>',
+  euro:'<path d="M15 6.5A6.4 6.4 0 0 0 9 16.5"></path><path d="M8.5 10.5h6M8.5 13.5h5"></path><path d="M15 17.5A6.4 6.4 0 0 1 9 7.5"></path>',
+  send:'<path d="M4 12l16-8-6 16-3-6-7-2z"></path>',
+  sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"></path>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"></path><path d="M10 18a2 2 0 0 0 4 0"></path>',
+  search:'<circle cx="10.5" cy="10.5" r="6.5"></circle><line x1="15.3" y1="15.3" x2="20" y2="20"></line>',
+  brain:'<circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="8" stroke-dasharray="2 3.2"></circle><circle cx="12" cy="4.2" r="1.1" fill="currentColor" stroke="none"></circle><circle cx="19.8" cy="12" r="1.1" fill="currentColor" stroke="none"></circle><circle cx="12" cy="19.8" r="1.1" fill="currentColor" stroke="none"></circle><circle cx="4.2" cy="12" r="1.1" fill="currentColor" stroke="none"></circle>',
+  gavel:'<path d="M14 5l5 5"></path><path d="M9.5 9.5l-6.5 6.5 3 3 6.5-6.5"></path><path d="M12.5 4l7.5 7.5"></path><line x1="3" y1="21" x2="9" y2="21"></line>',
+  layers:'<polygon points="12,3 21,8 12,13 3,8"></polygon><polyline points="3,13 12,18 21,13"></polyline><polyline points="3,17.5 12,22.5 21,17.5"></polyline>',
+  upload:'<path d="M12 16V4"></path><polyline points="6,9 12,3.5 18,9"></polyline><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path>',
+  pen:'<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"></path><line x1="13.5" y1="7.5" x2="16.5" y2="10.5"></line>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"></rect><polyline points="4,7 12,13 20,7"></polyline>',
+  play:'<polygon points="8,5 19,12 8,19"></polygon>',
+};
+function icon(name,style){ return `<svg class="ic" ${style?`style="${style}"`:''} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONP[name]||''}</svg>`; }
+
+/* ---------- PERSISTENZA ---------- */
+const Store = {
+  memory:null,
+  async load(){
+    try{
+      if(window.storage && window.storage.get){
+        const r = await window.storage.get('appaltante-mvp-v1');
+        if(r && r.value) return JSON.parse(r.value);
+      }
+    }catch(e){}
+    return this.memory;
+  },
+  async save(data){
+    this.memory = data;
+    try{ if(window.storage && window.storage.set){ await window.storage.set('appaltante-mvp-v1', JSON.stringify(data)); } }catch(e){}
+  },
+  async reset(){
+    this.memory = null;
+    try{ if(window.storage && window.storage.delete) await window.storage.delete('appaltante-mvp-v1'); }catch(e){}
+  }
+};
+let saveTimer = null;
+function persist(){ clearTimeout(saveTimer); saveTimer = setTimeout(()=>Store.save(D), 500); }
+
+/* ---------- DATI DI DEFAULT ---------- */
+const FASI = ['Programmazione','Pianificazione','Affidamento','Gara','Commissione','Aggiudicazione','Contrattualizzazione','Esecuzione','SAL','Varianti','Monitoraggio','Rendicontazione','Controlli','Audit','Chiusura'];
+
+function defaultData(){
+  return {
+  programmi:[
+    {id:'pnrr', sigla:'PNRR', nome:'Piano Nazionale di Ripresa e Resilienza', colore:'#1849D6', regole:742},
+    {id:'fesr', sigla:'FESR', nome:'Fondo Europeo di Sviluppo Regionale 21-27', colore:'#0B7A4B', regole:311},
+    {id:'fse',  sigla:'FSE+', nome:'Fondo Sociale Europeo Plus', colore:'#A15C00', regole:203},
+    {id:'fsc',  sigla:'FSC',  nome:'Fondo Sviluppo e Coesione', colore:'#7C4DDA', regole:140},
+    {id:'inter',sigla:'INTERREG', nome:'Cooperazione Territoriale Europea', colore:'#0A6FA8', regole:68},
+    {id:'reg',  sigla:'REG', nome:'Programmi e bandi regionali', colore:'#B4231E', regole:97},
+  ],
+  kdocs:{
+    pnrr:[
+      {id:'k1', nome:'Manuale Operativo M1C1 — Digitalizzazione PA', tipo:'Manuale operativo', step:4, regole:118},
+      {id:'k2', nome:'Circolare MEF-RGS n.28/2024 — Rendicontazione spese', tipo:'Circolare', step:4, regole:64},
+      {id:'k3', nome:'Linee guida ANAC su affidamenti PNRR', tipo:'Linee guida', step:4, regole:92},
+      {id:'k4', nome:'FAQ Unità di Missione PNRR — giu.2026', tipo:'FAQ', step:4, regole:41},
+    ],
+    fesr:[
+      {id:'k5', nome:'Manuale attuazione POR FESR 21-27', tipo:'Manuale operativo', step:4, regole:104},
+      {id:'k6', nome:'Pista di controllo — Autorità di Gestione', tipo:'Pista di controllo', step:4, regole:57},
+    ],
+    fse:[{id:'k7', nome:'Manuale operativo FSE+ 21-27', tipo:'Manuale operativo', step:4, regole:88}],
+    fsc:[{id:'k8', nome:'Delibera CIPESS assegnazione risorse', tipo:'Delibera', step:4, regole:35}],
+    inter:[{id:'k9', nome:'Programme Manual Interreg Italia-Svizzera', tipo:'Manuale operativo', step:4, regole:46}],
+    reg:[{id:'k10', nome:'Bando regionale rigenerazione urbana 2026', tipo:'Bando', step:4, regole:29}],
+  },
+  progetti:[
+    {id:'p1', titolo:'Digitalizzazione anagrafica comunale e interoperabilità ANPR', programma:'pnrr', cig:'A12F3B8C90', rup:'Elena Ferraro', importo:840000, fase:7, amm:92, doc:74, norm:88, econ:81, rischio:'medio', scadenza:'27 lug', scadenzaGiorni:7},
+    {id:'p2', titolo:'Riqualificazione energetica scuola primaria "G. Rodari"', programma:'fesr', cig:'B45G7H1D23', rup:'Elena Ferraro', importo:1250000, fase:9, amm:65, doc:58, norm:70, econ:60, rischio:'alto', scadenza:'22 lug', scadenzaGiorni:2},
+    {id:'p3', titolo:'Servizi di inclusione sociale per categorie fragili', programma:'fse', cig:'C78K2M4N56', rup:'Marco Villa', importo:410000, fase:11, amm:95, doc:97, norm:93, econ:90, rischio:'basso', scadenza:'14 ago', scadenzaGiorni:25},
+    {id:'p4', titolo:'Messa in sicurezza idrogeologica versante nord', programma:'fsc', cig:'D91P5Q7R89', rup:'Sara Conti', importo:2100000, fase:4, amm:58, doc:41, norm:66, econ:52, rischio:'alto', scadenza:'25 lug', scadenzaGiorni:5},
+    {id:'p5', titolo:'Piattaforma cooperazione transfrontaliera turismo lento', programma:'inter', cig:'E14T8U2V34', rup:'Marco Villa', importo:390000, fase:3, amm:70, doc:63, norm:77, econ:69, rischio:'medio', scadenza:'2 ago', scadenzaGiorni:13},
+    {id:'p6', titolo:'Rigenerazione ex mercato coperto in hub culturale', programma:'reg', cig:'F27W1X5Y67', rup:'Elena Ferraro', importo:960000, fase:12, amm:88, doc:80, norm:85, econ:78, rischio:'basso', scadenza:'30 lug', scadenzaGiorni:10},
+    {id:'p7', titolo:'Efficientamento flotta mezzi raccolta rifiuti', programma:'fesr', cig:'G30Z4A8B90', rup:'Sara Conti', importo:530000, fase:2, amm:40, doc:35, norm:60, econ:38, rischio:'medio', scadenza:'9 ago', scadenzaGiorni:20},
+  ],
+  agenti:[
+    {id:'norm', nome:'Agente Normativo', ruolo:'Controlla la conformità di atti e procedure rispetto a Codice dei Contratti, linee guida ANAC e regolamenti di programma.', icon:'shield', colore:'#1849D6', verifiche:47, pendenti:2},
+    {id:'rend', nome:'Agente Rendicontazione', ruolo:'Verifica ammissibilità delle spese e coerenza con costi standard e regole di programma.', icon:'euro', colore:'#0B7A4B', verifiche:31, pendenti:3},
+    {id:'gare', nome:'Agente Gare', ruolo:'Supporta la procedura di affidamento, dalla stesura del bando alla gestione dei chiarimenti.', icon:'gavel', colore:'#7C4DDA', verifiche:19, pendenti:1},
+    {id:'doc', nome:'Agente Documentale', ruolo:'Analizza ogni documento in ingresso: classifica, estrae dati, verifica completezza.', icon:'file', colore:'#0A6FA8', verifiche:128, pendenti:5},
+    {id:'risk', nome:'Agente Rischi', ruolo:'Individua criticità future incrociando scadenze, stato economico e precedenti simili.', icon:'alert', colore:'#B4231E', verifiche:22, pendenti:4},
+    {id:'scad', nome:'Agente Scadenze', ruolo:'Monitora milestone e termini normativi su tutti i progetti, con preavviso graduato.', icon:'clock', colore:'#A15C00', verifiche:64, pendenti:6},
+    {id:'audit', nome:'Agente Audit', ruolo:'Simula controlli di II livello e ispezioni, verificando tracciabilità e completezza del fascicolo.', icon:'search', colore:'#4A5670', verifiche:9, pendenti:1},
+    {id:'dec', nome:'Agente Decisionale', ruolo:'Incrocia i segnali degli altri agenti e suggerisce la prossima azione a maggior impatto.', icon:'sparkle', colore:'#1849D6', verifiche:15, pendenti:2},
+  ],
+  feed:[
+    {id:'f1', stato:'aperto', gruppo:'rischi', agente:'risk', titolo:'Rischio ritardo su "Riqualificazione scuola Rodari"', desc:'Il SAL 2 non è stato caricato entro la finestra prevista. Se non regolarizzato entro 48 ore, la milestone PNRR di luglio è a rischio.', perche:'L\u2019Agente Rischi incrocia la data di scadenza del SAL con lo storico di 40 progetti FESR simili: un ritardo oltre 5 giorni ha preceduto uno slittamento di milestone nel 78% dei casi.', cite:'Pista di controllo AdG FESR, §3.2', progetto:'p2', azioni:[{lbl:'Regolarizza SAL 2', act:'regolarizzaSAL'},{lbl:'Apri progetto', act:'apriProgetto'}]},
+    {id:'f2', stato:'aperto', gruppo:'rischi', agente:'norm', titolo:'Clausola del bando "Rodari" non aggiornata', desc:'L\u2019articolo 14 del disciplinare cita una soglia di subappalto superata dal correttivo 2025 al Codice dei Contratti.', perche:'L\u2019Agente Normativo confronta ogni atto caricato con l\u2019ultima versione indicizzata del Codice dei Contratti e segnala scostamenti articolo per articolo.', cite:'D.Lgs. 36/2023, correttivo 2025 — art. 119', progetto:'p2', azioni:[{lbl:'Rivedi clausola', act:'rivediClausola'},{lbl:'Ignora', act:'ignora'}]},
+    {id:'f3', stato:'aperto', gruppo:'scadenze', agente:'scad', titolo:'3 termini in scadenza nei prossimi 7 giorni', desc:'Presentazione offerte "Hub culturale" (30 lug), verifica requisiti "Anagrafica ANPR" (27 lug), regolarizzazione SAL "Rodari" (22 lug).', perche:'L\u2019Agente Scadenze applica un preavviso graduato: 15, 7 e 2 giorni prima del termine, con intensità crescente in base alla criticità procedurale.', cite:null, progetto:null, azioni:[{lbl:'Vedi tutte', act:'vediProgetti'}]},
+    {id:'f4', stato:'aperto', gruppo:'documenti', agente:'doc', titolo:'3 giustificativi di spesa mancanti — SAL 2', desc:'Il fascicolo "Anagrafica ANPR" ha 3 voci di spesa senza documento a supporto: fatture n. 442, 448 e 451.', perche:'L\u2019Agente Documentale confronta ogni riga del piano economico con gli allegati caricati e segnala le voci prive di riscontro documentale.', cite:'Manuale Operativo M1C1, §4.2', progetto:'p1', azioni:[{lbl:'Richiedi documenti', act:'richiediDocumenti'},{lbl:'Apri fascicolo', act:'apriProgetto'}]},
+    {id:'f5', stato:'aperto', gruppo:'decisioni', agente:'dec', titolo:'Nomina commissione giudicatrice — "Hub culturale"', desc:'Le offerte si chiudono tra 10 giorni: è il momento di formalizzare la commissione per non rallentare l\u2019aggiudicazione.', perche:'L\u2019Agente Decisionale suggerisce di anticipare la nomina di 5 giorni rispetto alla chiusura offerte, tempo medio storico necessario per le verifiche di incompatibilità.', cite:null, progetto:'p6', azioni:[{lbl:'Avvia nomina', act:'wizardCommissione'},{lbl:'Rimanda', act:'rimanda'}]},
+    {id:'f6', stato:'aperto', gruppo:'automazioni', agente:'rend', titolo:'Bozza determina di liquidazione pronta per revisione', desc:'Il Cervello ha generato la bozza della determina per il SAL 1 di "Cooperazione transfrontaliera", sul template di programma.', perche:'Generata incrociando template Interreg, piano economico approvato e giustificativi già verificati come ammissibili.', cite:'Programme Manual Interreg IT-CH, all. 6', progetto:'p5', azioni:[{lbl:'Rivedi bozza', act:'rivediDetermina'},{lbl:'Rimanda', act:'rimanda'}]},
+  ],
+  docs:{
+    p1:[
+      {id:'d1', nome:'Determina a contrarre', tipo:'Atto', stato:'ok'},
+      {id:'d2', nome:'Disciplinare di gara', tipo:'Atto', stato:'ok'},
+      {id:'d3', nome:'Fattura n. 442 — SAL 2', tipo:'Giustificativo', stato:'mancante'},
+      {id:'d4', nome:'Fattura n. 448 — SAL 2', tipo:'Giustificativo', stato:'mancante'},
+      {id:'d5', nome:'Fattura n. 451 — SAL 2', tipo:'Giustificativo', stato:'mancante'},
+      {id:'d6', nome:'DURC operatore aggiudicatario', tipo:'Requisito', stato:'in verifica'},
+    ],
+    p2:[
+      {id:'d7', nome:'Disciplinare di gara', tipo:'Atto', stato:'ok'},
+      {id:'d8', nome:'SAL 2 — Stato avanzamento lavori', tipo:'Contabilità', stato:'mancante'},
+      {id:'d9', nome:'Verbale commissione seduta 1', tipo:'Verbale', stato:'ok'},
+    ],
+    p6:[
+      {id:'d10', nome:'Bando di gara', tipo:'Atto', stato:'ok'},
+      {id:'d11', nome:'Capitolato speciale', tipo:'Atto', stato:'ok'},
+    ],
+  },
+  attiGenerati:[],
+  notifiche:[
+    {id:'n1', ts:Date.now()-3600e3*2, agente:'risk', txt:'<b>Agente Rischi</b> ha alzato il livello di rischio del progetto "Rodari" per ritardo SAL', letto:false},
+    {id:'n2', ts:Date.now()-3600e3*4, agente:'doc', txt:'<b>Agente Documentale</b> ha classificato 14 nuovi allegati caricati ieri sera', letto:false},
+    {id:'n3', ts:Date.now()-3600e3*7, agente:'scad', txt:'<b>Agente Scadenze</b> ha inviato 3 promemoria per termini nei prossimi 7 giorni', letto:false},
+  ],
+  agentLog:{
+    norm:[{ts:Date.now()-3600e3*3, txt:'Segnalata clausola non aggiornata al correttivo 2025 nel bando "Rodari"'}],
+    rend:[{ts:Date.now()-3600e3*5, txt:'Trovati 3 giustificativi mancanti nel SAL 2 di "Anagrafica ANPR"'}],
+    gare:[{ts:Date.now()-3600e3*8, txt:'Predisposta bozza chiarimenti per il bando "Hub culturale"'}],
+    doc:[{ts:Date.now()-3600e3*10, txt:'Classificati 14 nuovi allegati'}],
+    risk:[{ts:Date.now()-3600e3*2, txt:'Alzato rischio "Rodari" per ritardo SAL'}],
+    scad:[{ts:Date.now()-3600e3*6, txt:'Inviati 3 promemoria per termini in scadenza'}],
+    audit:[{ts:Date.now()-3600e3*24, txt:'Simulato controllo ANAC su "Anagrafica ANPR": esito positivo'}],
+    dec:[{ts:Date.now()-3600e3*1, txt:'Ricalcolate priorità della giornata dopo allerta rischio "Rodari"'}],
+  },
+  liveEvents:[],
+  cervHistory:[
+    {role:'ai', text:'Ciao Elena. Ho analizzato la giornata: 2 progetti richiedono attenzione entro 48 ore e ho preparato una bozza di determina pronta per la tua revisione.'},
+  ],
+  };
+}
+
+let D = defaultData();
+
+/* ---------- LOOKUP HELPERS ---------- */
+const byId = (arr,id)=>arr.find(x=>x.id===id);
+const proj = id=>byId(D.progetti,id);
+const prog = id=>byId(D.programmi,id);
+const agente = id=>byId(D.agenti,id);
+const feedItem = id=>byId(D.feed,id);
+let uid = 100;
+const newId = p=>(p||'x')+(++uid)+'-'+Math.random().toString(36).slice(2,6);
+function fmtTime(ts){ return new Date(ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }
+function agoTxt(ts){
+  const m = Math.round((Date.now()-ts)/60000);
+  if(m<1) return 'adesso';
+  if(m<60) return m+' min fa';
+  const h = Math.round(m/60);
+  if(h<24) return h+' h fa';
+  return Math.round(h/24)+' g fa';
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ---------- STATO UI ---------- */
+const UI = { page:'oggi', progetto:null, programma:null, projTab:'panoramica', filtroProgramma:'tutti', cervelloOpen:false, cervContext:'Centro Operativo', agentLogOpen:{} };
+
+/* ---------- TOAST + NOTIFICHE ---------- */
+function toast(msg, type){
+  const host = document.getElementById('toast-host');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type||'');
+  const ic = type==='ok'?'check':type==='err'?'x':type==='ai'?'sparkle':'bell';
+  el.innerHTML = icon(ic) + '<span>'+msg+'</span>';
+  host.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(8px)'; el.style.transition='all .2s'; setTimeout(()=>el.remove(),200); }, 2600);
+}
+function notify(agenteId, txt){
+  D.notifiche.unshift({id:newId('n'), ts:Date.now(), agente:agenteId, txt, letto:false});
+  if(D.notifiche.length>40) D.notifiche.length = 40;
+  updateBellBadge();
+  persist();
+}
+function updateBellBadge(){
+  const n = D.notifiche.filter(x=>!x.letto).length;
+  const b = document.getElementById('bellBadge');
+  b.textContent = n;
+  b.classList.toggle('hide', n===0);
+}
+function agentLog(agenteId, txt){
+  if(!D.agentLog[agenteId]) D.agentLog[agenteId] = [];
+  D.agentLog[agenteId].unshift({ts:Date.now(), txt});
+  if(D.agentLog[agenteId].length>25) D.agentLog[agenteId].length = 25;
+}
+function liveEvent(agenteId, txt){
+  D.liveEvents.unshift({ts:Date.now(), agente:agenteId, txt});
+  if(D.liveEvents.length>30) D.liveEvents.length = 30;
+  const el = document.getElementById('liveFeedBox');
+  if(el) el.innerHTML = renderLiveRows();
+}
+
+/* ---------- MODALE GENERICA ---------- */
+let modalOnClose = null;
+function openModal(title, bodyHTML, footButtons, opts){
+  const scrim = document.getElementById('modalScrim');
+  document.getElementById('modalBox').classList.toggle('wide', !!(opts&&opts.wide));
+  document.getElementById('modalTitle').innerHTML = title;
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  const foot = document.getElementById('modalFoot');
+  foot.innerHTML = '';
+  (footButtons||[]).forEach(b=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + (b.cls||'');
+    btn.innerHTML = (b.icon?icon(b.icon):'') + b.lbl;
+    btn.id = b.id||'';
+    if(b.disabled) btn.disabled = true;
+    btn.addEventListener('click', b.fn);
+    foot.appendChild(btn);
+  });
+  modalOnClose = (opts&&opts.onClose)||null;
+  scrim.classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modalScrim').classList.remove('open');
+  if(modalOnClose){ modalOnClose(); modalOnClose = null; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MOTORE AGENTI — attività continua + esecuzione manuale
+   ════════════════════════════════════════════════════════════════ */
+const AGENT_EVENTS = {
+  norm:[
+    ()=>'Verificati 3 atti pubblicati ieri: nessuna difformità rispetto al D.Lgs. 36/2023',
+    ()=>`Controllo incrociato clausole su "${randProj().titolo.slice(0,30)}…": conforme`,
+    ()=>'Indicizzato aggiornamento delle linee guida ANAC sugli affidamenti diretti',
+  ],
+  rend:[
+    ()=>`Ricalcolata ammissibilità spese su "${randProj().titolo.slice(0,30)}…": nessuna anomalia`,
+    ()=>'Verificate 6 fatture con il piano economico: importi coerenti',
+    ()=>'Aggiornata la matrice dei costi semplificati UCS per il programma FSE+',
+  ],
+  gare:[
+    ()=>'Preparata risposta a un quesito PEC ricevuto sul bando "Hub culturale"',
+    ()=>'Monitorata piattaforma di e-procurement: nessuna nuova offerta nelle ultime 2 ore',
+  ],
+  doc:[
+    ()=>`Classificati ${2+Math.floor(Math.random()*4)} nuovi documenti in ingresso`,
+    ()=>'Estratti metadati da 2 PDF caricati dal protocollo',
+    ()=>'Collegata una comunicazione PEC al fascicolo corretto',
+  ],
+  risk:[
+    ()=>'Rieseguita analisi predittiva sulle scadenze: nessun nuovo rischio rilevato',
+    ()=>`Aggiornato l\u2019indice di rischio di "${randProj().titolo.slice(0,28)}…"`,
+  ],
+  scad:[
+    ()=>'Ricontrollati i termini normativi su tutti i 7 progetti attivi',
+    ()=>'Programmato promemoria a 48h per la verifica requisiti "Anagrafica ANPR"',
+  ],
+  audit:[
+    ()=>'Verificata tracciabilità delle firme digitali sugli atti dell\u2019ultima settimana',
+    ()=>'Completato pre-audit documentale su un fascicolo campione: 0 rilievi',
+  ],
+  dec:[
+    ()=>'Riordinata la coda delle priorità in base ai segnali degli altri agenti',
+    ()=>'Nessuna nuova azione urgente: priorità confermate',
+  ],
+};
+function randProj(){ return D.progetti[Math.floor(Math.random()*D.progetti.length)]; }
+
+let engineTimer = null;
+function startAgentEngine(){
+  const tick = ()=>{
+    const ids = Object.keys(AGENT_EVENTS);
+    const aid = ids[Math.floor(Math.random()*ids.length)];
+    const pool = AGENT_EVENTS[aid];
+    const txt = pool[Math.floor(Math.random()*pool.length)]();
+    const a = agente(aid);
+    a.verifiche++;
+    agentLog(aid, txt);
+    liveEvent(aid, txt);
+    if(Math.random()<0.3) notify(aid, `<b>${a.nome}</b> — ${txt}`);
+    if(UI.page==='agenti' && !UI.progetto && !UI.programma) render();
+    persist();
+    engineTimer = setTimeout(tick, 11000 + Math.random()*14000);
+  };
+  engineTimer = setTimeout(tick, 6000);
+}
+
+function runAgentNow(aid){
+  const a = agente(aid);
+  const card = document.querySelector(`[data-agent-ic="${aid}"]`);
+  const dot = document.querySelector(`[data-agent-dot="${aid}"]`);
+  if(card) card.classList.add('running');
+  if(dot) dot.classList.add('busy');
+  toast(a.nome+' in esecuzione…','ai');
+  setTimeout(()=>{
+    const results = {
+      norm:{n:Math.floor(Math.random()*3), txt:'verifiche di conformità completate'},
+      rend:{n:Math.floor(Math.random()*2), txt:'controlli di ammissibilità completati'},
+      gare:{n:0, txt:'monitoraggio piattaforma completato'},
+      doc:{n:Math.floor(Math.random()*4), txt:'documenti riclassificati'},
+      risk:{n:Math.floor(Math.random()*2), txt:'scenari di rischio ricalcolati'},
+      scad:{n:0, txt:'termini ricontrollati su tutti i progetti'},
+      audit:{n:0, txt:'pre-audit del fascicolo campione completato'},
+      dec:{n:1, txt:'priorità ricalcolate'},
+    };
+    const r = results[aid];
+    a.verifiche += 1 + r.n;
+    const msg = `Esecuzione manuale: ${r.txt}${r.n?` (${r.n} elementi)`:''} — nessuna anomalia critica`;
+    agentLog(aid, msg);
+    liveEvent(aid, msg);
+    notify(aid, `<b>${a.nome}</b> — ${msg}`);
+    if(card) card.classList.remove('running');
+    if(dot) dot.classList.remove('busy');
+    toast(a.nome+': esecuzione completata','ok');
+    if(UI.page==='agenti') render();
+    persist();
+  }, 1800 + Math.random()*1200);
+}
+/* ════════════════════════════════════════════════════════════════
+   AZIONI — ogni pulsante del feed fa qualcosa di reale
+   ════════════════════════════════════════════════════════════════ */
+function risolviFeed(fid, esito){
+  const f = feedItem(fid);
+  if(!f || f.stato==='risolto') return;
+  const el = document.querySelector(`[data-fcard="${fid}"]`);
+  const done = ()=>{
+    f.stato = 'risolto';
+    f.esito = esito||'Completato';
+    const a = agente(f.agente);
+    if(a && a.pendenti>0) a.pendenti--;
+    persist();
+    render();
+    updateAlertline();
+  };
+  if(el){ el.classList.add('resolving'); setTimeout(done, 280); } else done();
+}
+
+const ACTIONS = {
+  apriProgetto(f){ if(f.progetto) openProgetto(f.progetto); },
+  vediProgetti(){ nav('progetti'); },
+  ignora(f){
+    risolviFeed(f.id, 'Ignorato dal RUP');
+    agentLog(f.agente, `Segnalazione "${f.titolo}" ignorata dal RUP — registrata nel fascicolo decisioni`);
+    toast('Segnalazione ignorata e tracciata nel registro decisioni','ok');
+  },
+  rimanda(f){
+    toast('Rimandata: te la riproporrò domani con priorità aggiornata','ai');
+    agentLog('dec', `Rimandata l\u2019azione "${f.titolo}" su richiesta del RUP`);
+    persist();
+  },
+
+  regolarizzaSAL(f){
+    const p = proj(f.progetto);
+    openModal('Regolarizza SAL 2 — '+esc(p.titolo.slice(0,42))+'…', `
+      <p style="font-size:.78rem;color:var(--ink-2);margin-bottom:14px">Carica lo Stato Avanzamento Lavori firmato dal Direttore Lavori. L\u2019Agente Documentale lo verificherà automaticamente prima del protocollo.</p>
+      <div class="dropzone" id="salDrop">
+        ${icon('upload')}
+        <div class="dz-title">Trascina qui il SAL 2, o clicca per selezionarlo</div>
+        <div class="dz-sub">PDF firmato digitalmente (.p7m accettato)</div>
+      </div>
+      <div id="salScanArea"></div>
+    `, [{lbl:'Annulla', fn:closeModal}]);
+    const drop = document.getElementById('salDrop');
+    const pick = ()=>{
+      drop.style.display='none';
+      const area = document.getElementById('salScanArea');
+      area.innerHTML = `
+        <div class="scan-box"><div class="scan-spinner"></div><div class="scan-txt"><b>SAL_2_Rodari_signed.pdf</b><br><span id="salScanStep" style="color:var(--ink-3);font-size:.68rem">Verifica firma digitale…</span><div class="progressbar"><div class="progressbar-fill" id="salProg" style="width:12%"></div></div></div></div>`;
+      const steps = ['Verifica firma digitale…','Estrazione importi e voci di spesa…','Confronto con il quadro economico…','Verifica coerenza con contratto…','Completato — nessuna anomalia'];
+      let i = 0;
+      const iv = setInterval(()=>{
+        i++;
+        document.getElementById('salScanStep').textContent = steps[Math.min(i,steps.length-1)];
+        document.getElementById('salProg').style.width = Math.min(15+i*22,100)+'%';
+        if(i>=steps.length-1){
+          clearInterval(iv);
+          area.querySelector('.scan-spinner').style.display='none';
+          document.getElementById('modalFoot').innerHTML='';
+          const b = document.createElement('button');
+          b.className='btn btn-primary'; b.innerHTML=icon('check')+'Protocolla e chiudi la segnalazione';
+          b.addEventListener('click', ()=>{
+            closeModal();
+            const d = (D.docs[p.id]||[]).find(x=>x.nome.startsWith('SAL 2'));
+            if(d) d.stato='ok';
+            p.doc = Math.min(100, p.doc+18);
+            p.amm = Math.min(100, p.amm+8);
+            p.rischio = 'medio';
+            risolviFeed(f.id, 'SAL 2 caricato e protocollato');
+            agentLog('doc','Verificato e protocollato SAL 2 di "Rodari": firma valida, importi coerenti');
+            agentLog('risk','Rischio "Rodari" abbassato da ALTO a MEDIO dopo regolarizzazione SAL');
+            notify('risk','<b>Agente Rischi</b> ha abbassato il rischio di "Rodari" a MEDIO dopo la regolarizzazione del SAL 2');
+            liveEvent('doc','SAL 2 "Rodari" verificato e protocollato');
+            cervSystemMsg('Il SAL 2 di "Rodari" è stato regolarizzato: ho aggiornato il gemello digitale e abbassato il livello di rischio a Medio. La milestone di luglio è di nuovo raggiungibile.');
+            toast('SAL 2 protocollato — rischio del progetto abbassato','ok');
+          });
+          document.getElementById('modalFoot').appendChild(b);
+        }
+      }, 700);
+    };
+    drop.addEventListener('click', pick);
+    drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('over');});
+    drop.addEventListener('dragleave', ()=>drop.classList.remove('over'));
+    drop.addEventListener('drop', e=>{e.preventDefault();pick();});
+  },
+
+  rivediClausola(f){
+    openModal('Revisione clausola — art. 14 Disciplinare "Rodari"', `
+      <p style="font-size:.76rem;color:var(--ink-2);margin-bottom:14px">L\u2019Agente Normativo ha individuato un riferimento superato e propone la correzione allineata al correttivo 2025.</p>
+      <div class="diff-block diff-old">
+        <div class="diff-lbl">Testo attuale — non conforme</div>
+        <div class="diff-txt">Il subappalto è ammesso <del>nel limite del 40% dell\u2019importo complessivo del contratto</del>, previa autorizzazione della stazione appaltante ai sensi dell\u2019art. 119 del D.Lgs. 36/2023.</div>
+      </div>
+      <div class="diff-block diff-new">
+        <div class="diff-lbl">Testo proposto — conforme al correttivo 2025</div>
+        <div class="diff-txt">Il subappalto è ammesso <mark>senza limiti quantitativi predeterminati, fatte salve le prestazioni indicate come non subappaltabili nel presente disciplinare</mark>, previa autorizzazione della stazione appaltante ai sensi dell\u2019art. 119 del D.Lgs. 36/2023, come modificato dal D.Lgs. 209/2024.</div>
+      </div>
+      <div class="cite-chip">${icon('file')} Fonte: D.Lgs. 36/2023, art. 119 — correttivo D.Lgs. 209/2024</div>
+    `, [
+      {lbl:'Annulla', fn:closeModal},
+      {lbl:'Applica correzione', cls:'btn-primary', icon:'check', fn:()=>{
+        closeModal();
+        const p = proj('p2');
+        p.norm = Math.min(100, p.norm+16);
+        risolviFeed(f.id, 'Clausola corretta e riallineata');
+        agentLog('norm','Applicata correzione art. 14 del disciplinare "Rodari": ora conforme al correttivo 2025');
+        liveEvent('norm','Clausola art. 14 "Rodari" corretta — conformità ripristinata');
+        notify('norm','<b>Agente Normativo</b> — clausola art. 14 di "Rodari" corretta e riallineata alla normativa vigente');
+        cervSystemMsg('Ho applicato la correzione all\u2019art. 14 del disciplinare "Rodari" e rigenerato la versione dell\u2019atto. La conformità normativa del progetto è salita al '+p.norm+'%.');
+        toast('Correzione applicata — nuova versione dell\u2019atto salvata','ok');
+      }},
+    ], {wide:true});
+  },
+
+  richiediDocumenti(f){
+    const p = proj(f.progetto);
+    openModal('Richiesta giustificativi — PEC generata dal Cervello', `
+      <div class="form-row"><label class="form-lbl">Destinatario</label><input class="form-input" value="amministrazione@operatore-aggiudicatario.pec.it"/></div>
+      <div class="form-row"><label class="form-lbl">Oggetto</label><input class="form-input" value="CIG ${p.cig} — Richiesta integrazione giustificativi SAL 2 (fatture 442, 448, 451)"/></div>
+      <div class="form-row"><label class="form-lbl">Testo (generato, modificabile)</label>
+      <textarea class="form-textarea" rows="7">Spett.le Operatore,
+con riferimento al contratto CIG ${p.cig}, in sede di verifica del SAL 2 questo Ufficio ha riscontrato l\u2019assenza dei giustificativi relativi alle fatture n. 442, 448 e 451.
+
+Si chiede di trasmettere i documenti mancanti entro 5 giorni lavorativi dal ricevimento della presente, ai sensi del Manuale Operativo M1C1, §4.2.
+
+Il RUP
+Dott.ssa Elena Ferraro</textarea></div>
+    `, [
+      {lbl:'Annulla', fn:closeModal},
+      {lbl:'Invia PEC', cls:'btn-primary', icon:'mail', fn:()=>{
+        closeModal();
+        risolviFeed(f.id, 'PEC di richiesta inviata — attesa 5 gg');
+        agentLog('doc','Inviata PEC di richiesta giustificativi (fatture 442, 448, 451) — timer di sollecito impostato a 5 gg');
+        liveEvent('doc','PEC richiesta giustificativi inviata per "Anagrafica ANPR"');
+        notify('scad','<b>Agente Scadenze</b> ha impostato un promemoria di sollecito tra 5 giorni lavorativi per i giustificativi richiesti');
+        toast('PEC inviata — sollecito automatico programmato tra 5 giorni','ok');
+      }},
+    ]);
+  },
+
+  wizardCommissione(f){
+    const membri = [
+      {id:'m1', nome:'Ing. Paolo Greco', ruolo:'Dirigente Area Tecnica', ok:true},
+      {id:'m2', nome:'Arch. Lucia Ferri', ruolo:'Funzionario LL.PP.', ok:true},
+      {id:'m3', nome:'Dott. Andrea Riva', ruolo:'Funzionario amministrativo', ok:false, motivo:'Ha partecipato alla stesura del capitolato'},
+      {id:'m4', nome:'Ing. Chiara Bassi', ruolo:'Esperta esterna (albo regionale)', ok:true},
+      {id:'m5', nome:'Geom. Franco Neri', ruolo:'Ufficio patrimonio', ok:true},
+    ];
+    let selezione = new Set();
+    let step = 1;
+    const paint = ()=>{
+      let body = `<div class="wizard-steps">${[1,2,3].map(s=>`<div class="wizard-step ${s<=step?'on':''}"></div>`).join('')}</div>`;
+      let foot = [];
+      if(step===1){
+        body += `<p style="font-size:.76rem;color:var(--ink-2);margin-bottom:12px"><b>Passo 1 — Scegli 3 membri.</b> L\u2019Agente Gare verificherà automaticamente le incompatibilità.</p>` +
+          membri.map(m=>`
+          <label class="check-row ${selezione.has(m.id)?'checked':''}" data-m="${m.id}">
+            <input type="checkbox" ${selezione.has(m.id)?'checked':''}/>
+            <div style="flex:1"><div class="check-name">${m.nome}</div><div class="check-sub">${m.ruolo}</div></div>
+          </label>`).join('');
+        foot = [
+          {lbl:'Annulla', fn:closeModal},
+          {lbl:'Verifica incompatibilità', cls:'btn-primary', icon:'search', id:'wzNext', disabled:selezione.size!==3, fn:()=>{ step=2; paint(); setTimeout(()=>{ step=2.5; paint(); }, 1600); }},
+        ];
+      } else if(step===2){
+        body += `<div class="scan-box"><div class="scan-spinner"></div><div class="scan-txt">L\u2019Agente Gare sta verificando incompatibilità, conflitti di interesse e carichi pendenti sui membri selezionati…</div></div>`;
+        foot = [];
+      } else if(step===2.5){
+        const sel = membri.filter(m=>selezione.has(m.id));
+        const problemi = sel.filter(m=>!m.ok);
+        body += `<p style="font-size:.76rem;color:var(--ink-2);margin-bottom:12px"><b>Passo 2 — Esito verifiche.</b></p>` +
+          sel.map(m=>`
+          <div class="check-row" style="cursor:default">
+            <div style="flex:1"><div class="check-name">${m.nome}</div><div class="check-sub">${m.ruolo}</div></div>
+            <span class="check-result" style="color:${m.ok?'var(--ok)':'var(--crit)'}">${m.ok?'✓ Nessuna incompatibilità':'✕ '+m.motivo}</span>
+          </div>`).join('');
+        if(problemi.length){
+          body += `<p style="font-size:.72rem;color:var(--crit);font-weight:600;margin-top:10px">Rimuovi i membri incompatibili e scegline altri prima di procedere.</p>`;
+          foot = [{lbl:'Torna alla selezione', fn:()=>{ problemi.forEach(m=>selezione.delete(m.id)); step=1; paint(); }}];
+        } else {
+          foot = [
+            {lbl:'Indietro', fn:()=>{ step=1; paint(); }},
+            {lbl:'Genera atto di nomina', cls:'btn-primary', icon:'pen', fn:()=>{ step=3; paint(); }},
+          ];
+        }
+      } else if(step===3){
+        const sel = membri.filter(m=>selezione.has(m.id));
+        body += `<p style="font-size:.76rem;color:var(--ink-2);margin-bottom:12px"><b>Passo 3 — Bozza dell\u2019atto</b> (generata dal Cervello, pronta per la firma).</p>
+        <div class="atto-paper"><h4>DETERMINA DI NOMINA COMMISSIONE GIUDICATRICE</h4>Procedura: "Rigenerazione ex mercato coperto in hub culturale" — CIG F27W1X5Y67
+
+IL RESPONSABILE UNICO DEL PROGETTO
+
+VISTO l\u2019art. 93 del D.Lgs. 36/2023;
+VERIFICATA l\u2019assenza di cause di incompatibilità dei membri ai sensi dell\u2019art. 93, co. 5;
+
+DETERMINA
+
+di nominare la Commissione giudicatrice come segue:
+${sel.map((m,i)=>`  ${i+1}. ${m.nome} — ${m.ruolo}${i===0?' (Presidente)':''}`).join('\n')}
+
+La Commissione si insedierà entro 5 giorni dalla scadenza del termine di presentazione delle offerte.</div>`;
+        foot = [
+          {lbl:'Indietro', fn:()=>{ step=2.5; paint(); }},
+          {lbl:'Firma e protocolla', cls:'btn-primary', icon:'check', fn:()=>{
+            closeModal();
+            D.attiGenerati.unshift({id:newId('a'), ts:Date.now(), nome:'Determina nomina commissione — Hub culturale', progetto:'p6', tipo:'Determina'});
+            if(!D.docs.p6) D.docs.p6 = [];
+            D.docs.p6.push({id:newId('d'), nome:'Determina nomina commissione', tipo:'Atto', stato:'ok'});
+            const p6 = proj('p6');
+            p6.amm = Math.min(100, p6.amm+6);
+            risolviFeed(f?f.id:'f5', 'Commissione nominata e atto protocollato');
+            agentLog('gare','Commissione "Hub culturale" nominata: verifiche incompatibilità superate, atto protocollato');
+            liveEvent('gare','Commissione giudicatrice "Hub culturale" nominata');
+            notify('gare','<b>Agente Gare</b> — commissione "Hub culturale" nominata; convocazione prima seduta preparata in bozza');
+            cervSystemMsg('La commissione per "Hub culturale" è stata nominata e l\u2019atto protocollato. Ho già preparato in bozza la convocazione della prima seduta: la troverai tra le automazioni quando le offerte saranno chiuse.');
+            toast('Atto firmato e protocollato — commissione nominata','ok');
+          }},
+        ];
+      }
+      openModal('Nomina commissione giudicatrice — "Hub culturale"', body, foot, {wide:true});
+      document.querySelectorAll('[data-m]').forEach(row=>{
+        row.addEventListener('click', e=>{
+          e.preventDefault();
+          const id = row.dataset.m;
+          if(selezione.has(id)) selezione.delete(id);
+          else if(selezione.size<3) selezione.add(id);
+          else toast('Puoi selezionare al massimo 3 membri','err');
+          paint();
+        });
+      });
+    };
+    paint();
+  },
+
+  rivediDetermina(f){
+    const p = proj('p5');
+    openModal('Bozza determina di liquidazione — SAL 1', `
+      <div class="atto-paper"><h4>DETERMINA DI LIQUIDAZIONE N. ___ /2026</h4>Progetto: "${esc(p.titolo)}" — CIG ${p.cig}
+Programma: Interreg Italia-Svizzera
+
+IL RESPONSABILE UNICO DEL PROGETTO
+
+VISTO il contratto sottoscritto in data 12/03/2026;
+VISTO il SAL 1 emesso dal Direttore dell\u2019Esecuzione;
+VERIFICATA l\u2019ammissibilità delle spese da parte dell\u2019Agente Rendicontazione (esito: nessuna anomalia, 14/14 giustificativi validi);
+
+DETERMINA
+
+di liquidare l\u2019importo di € ${(p.importo*0.3).toLocaleString('it-IT')} a favore dell\u2019operatore economico, quale corrispettivo del SAL 1, come da quadro economico approvato.
+
+Fonte regole applicate: Programme Manual Interreg IT-CH, allegato 6.</div>
+      <div class="cite-chip" style="margin-top:12px">${icon('sparkle')} Generata dal Cervello · verificata dall\u2019Agente Rendicontazione · pronta per firma</div>
+    `, [
+      {lbl:'Chiedi modifiche al Cervello', cls:'btn-ai', icon:'brain', fn:()=>{ closeModal(); openCervello(); sendCervello('Modifica la determina di liquidazione del SAL 1 Interreg'); }},
+      {lbl:'Firma e protocolla', cls:'btn-primary', icon:'check', fn:()=>{
+        closeModal();
+        D.attiGenerati.unshift({id:newId('a'), ts:Date.now(), nome:'Determina liquidazione SAL 1 — Interreg', progetto:'p5', tipo:'Determina'});
+        p.econ = Math.min(100, p.econ+10);
+        p.amm = Math.min(100, p.amm+5);
+        risolviFeed(f?f.id:'f6', 'Determina firmata e protocollata');
+        agentLog('rend','Determina di liquidazione SAL 1 firmata: liquidazione avviata, mandato in preparazione');
+        liveEvent('rend','Determina liquidazione SAL 1 Interreg firmata e protocollata');
+        notify('rend','<b>Agente Rendicontazione</b> — determina SAL 1 protocollata; predisposto il collegamento con la piattaforma di monitoraggio');
+        toast('Determina firmata e protocollata','ok');
+      }},
+    ], {wide:true});
+  },
+};
+
+function apriGeneraAtto(pid){
+  const p = proj(pid);
+  openModal('Genera atto — '+esc(p.titolo.slice(0,40))+'…', `
+    <div class="form-row"><label class="form-lbl">Tipo di atto</label>
+      <select class="form-select" id="attoTipo">
+        <option>Determina a contrarre</option>
+        <option>Determina di aggiudicazione</option>
+        <option>Determina di liquidazione</option>
+        <option>Verbale di verifica requisiti</option>
+        <option>Lettera di invito</option>
+        <option>Relazione del RUP</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-lbl">Indicazioni per il Cervello (facoltative)</label>
+      <textarea class="form-textarea" id="attoNote" rows="3" placeholder="Es.: cita l\u2019urgenza legata alla milestone di programma…"></textarea>
+    </div>
+    <div id="attoOut"></div>
+  `, [
+    {lbl:'Annulla', fn:closeModal},
+    {lbl:'Genera bozza', cls:'btn-ai', icon:'sparkle', id:'attoGenBtn', fn:()=>{
+      const tipo = document.getElementById('attoTipo').value;
+      const out = document.getElementById('attoOut');
+      out.innerHTML = `<div class="scan-box"><div class="scan-spinner"></div><div class="scan-txt">Il Cervello sta componendo la bozza usando il template di programma, il quadro economico e la normativa indicizzata…</div></div>`;
+      document.getElementById('attoGenBtn').disabled = true;
+      setTimeout(()=>{
+        out.innerHTML = `<div class="atto-paper" style="margin-top:4px"><h4>${tipo.toUpperCase()} N. ___ /2026</h4>Progetto: "${esc(p.titolo)}" — CIG ${p.cig}
+
+IL RESPONSABILE UNICO DEL PROGETTO
+
+VISTO il D.Lgs. 36/2023 e s.m.i.;
+VISTE le regole del programma ${prog(p.programma).sigla} come indicizzate nel Knowledge Engine;
+RICHIAMATA la fase attuale della procedura (${FASI[p.fase]});
+
+DETERMINA
+
+[corpo dell\u2019atto composto sul template ufficiale — ${tipo}]
+
+Ogni riferimento normativo è stato verificato dall\u2019Agente Normativo alla data odierna.</div>`;
+        const foot = document.getElementById('modalFoot');
+        foot.innerHTML = '';
+        const b1 = document.createElement('button'); b1.className='btn'; b1.textContent='Chiudi'; b1.addEventListener('click',closeModal);
+        const b2 = document.createElement('button'); b2.className='btn btn-primary'; b2.innerHTML=icon('check')+'Firma e protocolla';
+        b2.addEventListener('click', ()=>{
+          closeModal();
+          D.attiGenerati.unshift({id:newId('a'), ts:Date.now(), nome:tipo+' — '+p.titolo.slice(0,30)+'…', progetto:pid, tipo:'Atto generato'});
+          if(!D.docs[pid]) D.docs[pid]=[];
+          D.docs[pid].push({id:newId('d'), nome:tipo, tipo:'Atto', stato:'ok'});
+          p.amm = Math.min(100,p.amm+4); p.doc = Math.min(100,p.doc+4);
+          agentLog('gare', tipo+' generata e protocollata per "'+p.titolo.slice(0,32)+'…"');
+          liveEvent('gare', tipo+' protocollata per "'+p.titolo.slice(0,28)+'…"');
+          notify('norm','<b>Agente Normativo</b> ha validato la nuova '+tipo.toLowerCase()+' prima del protocollo');
+          toast(tipo+' firmata e protocollata','ok');
+          render();
+        });
+        foot.appendChild(b1); foot.appendChild(b2);
+      }, 2100);
+    }},
+  ], {wide:true});
+}
+/* ════════════════════════════════════════════════════════════════
+   KNOWLEDGE UPLOAD — pipeline reale di ingestione
+   ════════════════════════════════════════════════════════════════ */
+let uploadTargetProgramma = null;
+function apriUploadConoscenza(programmaId){
+  uploadTargetProgramma = programmaId||null;
+  const sel = programmaId ? '' : `
+    <div class="form-row"><label class="form-lbl">Programma di destinazione</label>
+      <select class="form-select" id="upProg">${D.programmi.map(pr=>`<option value="${pr.id}">${pr.sigla} — ${pr.nome}</option>`).join('')}</select>
+    </div>`;
+  openModal('Aggiorna il Cervello — carica nuova conoscenza', `
+    ${sel}
+    <div class="dropzone" id="kDrop">
+      ${icon('upload')}
+      <div class="dz-title">Trascina qui manuali, circolari, linee guida, FAQ</div>
+      <div class="dz-sub">PDF, DOCX, TXT, MD, XLSX — il Cervello li interpreta, li segmenta e ne estrae le regole</div>
+    </div>
+    <p style="font-size:.68rem;color:var(--ink-3)">Ogni documento caricato diventa conoscenza interrogabile: gli agenti la useranno da subito nei loro controlli, e tutti i progetti del programma la erediteranno automaticamente.</p>
+  `, [{lbl:'Chiudi', fn:closeModal}]);
+  const drop = document.getElementById('kDrop');
+  const fi = document.getElementById('fileInput');
+  const handleFiles = files=>{
+    const progId = uploadTargetProgramma || document.getElementById('upProg').value;
+    closeModal();
+    Array.from(files).forEach((file,i)=>setTimeout(()=>ingestDocument(progId, file), i*600));
+    if(!files.length){ ingestDocument(progId, null); }
+  };
+  drop.addEventListener('click', ()=>{ fi.value=''; fi.onchange = ()=>handleFiles(fi.files); fi.click(); });
+  drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('over');});
+  drop.addEventListener('dragleave', ()=>drop.classList.remove('over'));
+  drop.addEventListener('drop', e=>{ e.preventDefault(); handleFiles(e.dataTransfer.files); });
+}
+
+function guessTipo(nome){
+  const n = nome.toLowerCase();
+  if(n.includes('manuale')) return 'Manuale operativo';
+  if(n.includes('circolare')) return 'Circolare';
+  if(n.includes('faq')) return 'FAQ';
+  if(n.includes('linee')||n.includes('guida')) return 'Linee guida';
+  if(n.includes('bando')) return 'Bando';
+  if(n.includes('delibera')) return 'Delibera';
+  if(n.includes('decreto')) return 'Decreto';
+  if(n.includes('template')||n.includes('modello')) return 'Template';
+  return 'Documento di programma';
+}
+
+function ingestDocument(progId, file){
+  const nome = file ? file.name.replace(/\.[^.]+$/,'') : 'Documento di esempio '+(Math.floor(Math.random()*90)+10);
+  const sizeKb = file ? Math.max(1, Math.round(file.size/1024)) : 300;
+  const doc = {id:newId('k'), nome, tipo:guessTipo(nome), step:1, regole:0, nuovo:true};
+  if(!D.kdocs[progId]) D.kdocs[progId] = [];
+  D.kdocs[progId].unshift(doc);
+  if(UI.programma!==progId){ openProgramma(progId); } else render();
+  toast('"'+nome.slice(0,36)+'" ricevuto — ingestione avviata','ai');
+  agentLog('doc','Avviata ingestione di "'+nome.slice(0,40)+'" nel programma '+prog(progId).sigla);
+
+  const stepNames = ['Caricato','Segmentato','Regole estratte','Collegato al grafo'];
+  let s = 1;
+  const iv = setInterval(()=>{
+    s++;
+    doc.step = s;
+    if(s===3){
+      doc.regole = Math.max(4, Math.min(160, Math.round(sizeKb/14) + Math.floor(Math.random()*12)));
+      prog(progId).regole += doc.regole;
+    }
+    if(UI.programma===progId) render();
+    if(s>=4){
+      clearInterval(iv);
+      doc.nuovo = false;
+      const pr = prog(progId);
+      agentLog('doc','Completata ingestione di "'+nome.slice(0,40)+'": '+doc.regole+' regole estratte e collegate');
+      liveEvent('doc','"'+nome.slice(0,32)+'" indicizzato: +'+doc.regole+' regole per '+pr.sigla);
+      notify('doc','<b>Agente Documentale</b> ha indicizzato "<b>'+esc(nome.slice(0,40))+'</b>": '+doc.regole+' regole estratte, ora attive per tutti i progetti '+pr.sigla);
+      cervSystemMsg('Ho letto e indicizzato "'+nome.slice(0,44)+'". Ho estratto '+doc.regole+' regole operative: i progetti '+pr.sigla+' le ereditano da subito e gli agenti le stanno già applicando nei controlli.');
+      toast('"'+nome.slice(0,30)+'" indicizzato: +'+doc.regole+' regole','ok');
+      setTimeout(()=>{
+        agentLog('norm','Rieseguiti i controlli di conformità con le nuove regole di "'+nome.slice(0,34)+'": nessun nuovo scostamento');
+        liveEvent('norm','Controlli rieseguiti con la nuova conoscenza: tutto conforme');
+        if(UI.page==='agenti') render();
+        persist();
+      }, 4000);
+      persist();
+      if(UI.programma===progId) render();
+    }
+  }, 1400);
+}
+/* ════════════════════════════════════════════════════════════════
+   NAVIGAZIONE + RENDER
+   ════════════════════════════════════════════════════════════════ */
+const NAV_ITEMS = [
+  {id:'oggi', label:'Oggi', icon:'today'},
+  {id:'progetti', label:'Progetti', icon:'folder', badge:true},
+  {id:'programmi', label:'Programmi', icon:'book'},
+  {id:'agenti', label:'Agenti', icon:'network'},
+  {id:'archivio', label:'Archivio', icon:'archive'},
+];
+const PAGE_META = {
+  oggi:{title:'Oggi', sub:'Il tuo contesto di lavoro, non un menu'},
+  progetti:{title:'Progetti', sub:'Il gemello digitale di ogni procedura, sempre aggiornato'},
+  programmi:{title:'Programmi', sub:'Knowledge Engine — la conoscenza normativa a disposizione'},
+  agenti:{title:'Agenti AI', sub:'Otto specialisti che lavorano insieme al RUP'},
+  archivio:{title:'Archivio Documenti', sub:'Tutto ciò che il Cervello ha letto e collegato'},
+};
+
+function nav(page){
+  UI.page = page; UI.progetto = null; UI.programma = null;
+  document.querySelectorAll('.rail-item[data-page],.tab-item').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
+  const meta = PAGE_META[page]||{title:page,sub:''};
+  document.getElementById('tbTitle').textContent = meta.title;
+  document.getElementById('tbSub').textContent = meta.sub;
+  setCervContext(meta.title);
+  render();
+  window.scrollTo(0,0);
+}
+
+function render(){
+  const v = document.getElementById('view');
+  if(UI.progetto){ v.innerHTML = renderProgettoDettaglio(UI.progetto); bindProgettoDettaglio(); return; }
+  if(UI.programma){ v.innerHTML = renderProgrammaDettaglio(UI.programma); bindProgrammaDettaglio(); return; }
+  if(UI.page==='oggi'){ v.innerHTML = renderOggi(); bindOggi(); }
+  else if(UI.page==='progetti'){ v.innerHTML = renderProgetti(); bindProgetti(); }
+  else if(UI.page==='programmi'){ v.innerHTML = renderProgrammi(); bindProgrammi(); }
+  else if(UI.page==='agenti'){ v.innerHTML = renderAgenti(); bindAgenti(); }
+  else if(UI.page==='archivio'){ v.innerHTML = renderArchivio(); bindArchivio(); }
+}
+
+/* ---------- FEED CARD ---------- */
+function renderFeedCard(item){
+  const a = agente(item.agente);
+  const p = item.progetto?proj(item.progetto):null;
+  const risolto = item.stato==='risolto';
+  return `
+  <div class="card fcard ${risolto?'risolto':''}" data-fcard="${item.id}">
+    <div class="fcard-top">
+      <div class="fcard-ic" style="background:${a.colore}14;color:${a.colore};border-color:${a.colore}30">${icon(risolto?'check':a.icon)}</div>
+      <div class="fcard-body">
+        <div class="fcard-headline">
+          <span class="fcard-title">${item.titolo}</span>
+          <span class="chip chip-neutral">${a.nome}</span>
+          ${risolto?`<span class="chip chip-ok">${icon('check')} ${item.esito||'Risolto'}</span>`:''}
+        </div>
+        <div class="fcard-desc">${item.desc}</div>
+        ${p?`<div class="fcard-meta"><span class="fcard-proj" data-goproj="${p.id}">${icon('folder')} ${p.titolo.length>46?p.titolo.slice(0,46)+'…':p.titolo}</span></div>`:''}
+        ${!risolto?`
+        <button class="why-toggle" data-why="${item.id}">${icon('sparkle')} Perché il Cervello lo segnala ${icon('chevronRight')}</button>
+        <div class="why-body" id="why-${item.id}">${item.perche}${item.cite?`<div class="cite-chip">${icon('file')} Fonte: ${item.cite}</div>`:''}</div>
+        <div class="fcard-actions">
+          ${item.azioni.map((az,i)=>`<button class="btn ${i===0?'btn-primary':''} btn-sm" data-feedact="${item.id}:${az.act}">${az.lbl}</button>`).join('')}
+        </div>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+function bindFeedCards(root){
+  (root||document).querySelectorAll('.why-toggle').forEach(b=>b.addEventListener('click', ()=>{
+    b.classList.toggle('open');
+    const w = document.getElementById('why-'+b.dataset.why);
+    if(w) w.classList.toggle('open');
+  }));
+  (root||document).querySelectorAll('[data-goproj]').forEach(b=>b.addEventListener('click', ()=>openProgetto(b.dataset.goproj)));
+  (root||document).querySelectorAll('[data-feedact]').forEach(b=>b.addEventListener('click', ()=>{
+    const [fid, act] = b.dataset.feedact.split(':');
+    const f = feedItem(fid);
+    if(ACTIONS[act]) ACTIONS[act](f);
+  }));
+}
+
+/* ---------- PAGINA OGGI ---------- */
+const GRUPPI_FEED = [
+  {id:'rischi', label:'Rischi da presidiare', icon:'alert'},
+  {id:'scadenze', label:'Scadenze in arrivo', icon:'clock'},
+  {id:'documenti', label:'Documenti da completare', icon:'file'},
+  {id:'decisioni', label:'Decisioni da prendere', icon:'gavel'},
+  {id:'automazioni', label:'Automazioni proposte', icon:'sparkle'},
+];
+function riskBg(g){ return g<=3?'var(--crit-soft)':g<=10?'var(--warn-soft)':'var(--ok-soft)'; }
+function riskFg(g){ return g<=3?'var(--crit)':g<=10?'var(--warn)':'var(--ok)'; }
+function renderLiveRows(){
+  if(!D.liveEvents.length) return '<div style="font-size:.68rem;color:var(--ink-3);padding:6px 0">Gli agenti sono attivi: gli eventi compariranno qui in tempo reale.</div>';
+  return D.liveEvents.slice(0,12).map(ev=>{
+    const a = agente(ev.agente);
+    return `<div class="live-row"><span class="live-dot" style="background:${a.colore}"></span><span class="live-txt"><b>${a.nome.replace('Agente ','')}</b> · ${ev.txt}</span><span class="live-time">${fmtTime(ev.ts)}</span></div>`;
+  }).join('');
+}
+function renderOggi(){
+  const dataFmt = new Date().toLocaleDateString('it-IT',{weekday:'long', day:'numeric', month:'long'});
+  const aperti = D.feed.filter(f=>f.stato==='aperto');
+  const risoltiOggi = D.feed.filter(f=>f.stato==='risolto');
+  const critici = D.progetti.filter(p=>p.rischio==='alto').length;
+  const scadImminenti = D.progetti.filter(p=>p.scadenzaGiorni<=7).length;
+  const pendentiTot = D.agenti.reduce((s,a)=>s+a.pendenti,0);
+
+  const groups = GRUPPI_FEED.map(g=>{
+    const items = D.feed.filter(f=>f.gruppo===g.id && f.stato==='aperto');
+    if(!items.length) return '';
+    return `<div class="feed-group">
+      <div class="feed-group-h">${icon(g.icon)}<span class="feed-group-title">${g.label}</span><span class="feed-group-count">${items.length}</span></div>
+      <div class="feed-list">${items.map(renderFeedCard).join('')}</div>
+    </div>`;
+  }).join('');
+
+  const doneBlock = risoltiOggi.length ? `<div class="feed-group">
+      <div class="feed-group-h">${icon('check')}<span class="feed-group-title">Completate oggi</span><span class="feed-group-count">${risoltiOggi.length}</span></div>
+      <div class="feed-list">${risoltiOggi.map(renderFeedCard).join('')}</div>
+    </div>` : '';
+
+  const empty = !aperti.length ? `<div class="card" style="padding:26px;text-align:center">
+      <div style="font-size:1.6rem;margin-bottom:6px">🎯</div>
+      <div style="font-weight:800;font-size:.9rem">Tutto sotto controllo</div>
+      <div style="font-size:.75rem;color:var(--ink-3);margin-top:4px">Nessuna azione richiesta adesso. Gli agenti continuano a monitorare e ti avviseranno al primo segnale.</div>
+    </div>` : '';
+
+  const scadSide = D.progetti.slice().sort((a,b)=>a.scadenzaGiorni-b.scadenzaGiorni).slice(0,4).map(p=>`
+    <div class="mini-scad" data-goproj="${p.id}">
+      <div class="mini-scad-pill" style="background:${riskBg(p.scadenzaGiorni)};color:${riskFg(p.scadenzaGiorni)}">${p.scadenzaGiorni}g</div>
+      <div><div class="mini-scad-txt">${p.titolo.length>38?p.titolo.slice(0,38)+'…':p.titolo}</div>
+      <div class="mini-scad-sub">${prog(p.programma).sigla} · scade il ${p.scadenza}</div></div>
+    </div>`).join('');
+
+  return `
+  <div class="oggi-hero">
+    <div class="oggi-hero-top">
+      <div><div class="oggi-greet">Buongiorno, Elena</div><div class="oggi-date">${dataFmt}</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff" id="oggiUpload">${icon('upload')} Aggiorna conoscenza</button>
+        <button class="btn" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff" id="oggiAsk">${icon('brain')} Chiedi al Cervello</button>
+      </div>
+    </div>
+    <div class="oggi-stats">
+      <div class="oggi-stat"><b>${aperti.length}</b><span>Azioni aperte</span></div>
+      <div class="oggi-stat"><b>${risoltiOggi.length}</b><span>Completate oggi</span></div>
+      <div class="oggi-stat"><b>${critici}</b><span>Progetti a rischio alto</span></div>
+      <div class="oggi-stat"><b>${scadImminenti}</b><span>Scadenze entro 7 gg</span></div>
+      <div class="oggi-stat"><b>${pendentiTot}</b><span>Suggerimenti da rivedere</span></div>
+    </div>
+  </div>
+  <div class="oggi-grid">
+    <div>${empty}${groups}${doneBlock}</div>
+    <div>
+      <div class="card side-card">
+        <div class="side-card-h">${icon('network')}<span class="side-card-title">Attività degli agenti — in diretta</span></div>
+        <div class="live-feed" id="liveFeedBox">${renderLiveRows()}</div>
+      </div>
+      <div class="card side-card">
+        <div class="side-card-h">${icon('clock')}<span class="side-card-title">Prossime scadenze</span></div>
+        ${scadSide}
+      </div>
+    </div>
+  </div>`;
+}
+function bindOggi(){
+  bindFeedCards();
+  document.querySelectorAll('.mini-scad[data-goproj]').forEach(b=>b.addEventListener('click',()=>openProgetto(b.dataset.goproj)));
+  document.getElementById('oggiAsk')?.addEventListener('click', openCervello);
+  document.getElementById('oggiUpload')?.addEventListener('click', ()=>apriUploadConoscenza(null));
+}
+
+/* ---------- PROGETTI ---------- */
+function gaugeMini(lbl,val){
+  const c = val>=80?'var(--ok)':val>=55?'var(--warn)':'var(--crit)';
+  return `<div class="gauge"><div class="gauge-top"><span class="gauge-lbl">${lbl}</span><span class="gauge-val">${val}%</span></div><div class="gauge-track"><div class="gauge-fill" style="width:${val}%;background:${c}"></div></div></div>`;
+}
+function renderProgetti(){
+  const list = UI.filtroProgramma==='tutti' ? D.progetti : D.progetti.filter(p=>p.programma===UI.filtroProgramma);
+  return `
+  <div class="view-head">
+    <div><div class="view-h1">Progetti</div><div class="view-p">Ogni scheda è il gemello digitale del progetto: stato amministrativo, documentale, normativo ed economico aggiornati in automatico.</div></div>
+    <button class="btn btn-primary" id="nuovoProg">${icon('sparkle')} Nuovo progetto guidato</button>
+  </div>
+  <div class="filterbar">
+    ${['tutti',...D.programmi.map(x=>x.id)].map(c=>`<button class="fchip ${c===UI.filtroProgramma?'on':''}" data-filt="${c}">${c==='tutti'?'Tutti i programmi':prog(c).sigla}</button>`).join('')}
+  </div>
+  <div class="proj-grid">${list.map(p=>{
+    const pr = prog(p.programma);
+    const rc = p.rischio==='alto'?'var(--crit)':p.rischio==='medio'?'var(--warn)':'var(--ok)';
+    const rl = p.rischio==='alto'?'Rischio alto':p.rischio==='medio'?'Rischio medio':'Rischio basso';
+    return `<div class="card pcard" data-open="${p.id}">
+      <div><div class="pcard-prog" style="color:${pr.colore}">${pr.sigla}</div>
+      <div class="pcard-title">${p.titolo}</div>
+      <div class="pcard-cig mono">CIG ${p.cig}</div></div>
+      <div class="pcard-fase"><span class="chip chip-info">${icon('layers')} Fase ${p.fase+1}/15 · ${FASI[p.fase]}</span></div>
+      <div class="pcard-gauges">${gaugeMini('Documentale',p.doc)}${gaugeMini('Normativo',p.norm)}</div>
+      <div class="pcard-foot">
+        <div class="pcard-scad">${icon('clock')} Scade il ${p.scadenza}</div>
+        <div class="pcard-rischio"><span class="risk-dot" style="background:${rc}"></span><span style="color:${rc};font-size:.66rem;font-weight:700">${rl}</span></div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function bindProgetti(){
+  document.querySelectorAll('[data-filt]').forEach(b=>b.addEventListener('click',()=>{ UI.filtroProgramma=b.dataset.filt; render(); }));
+  document.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openProgetto(b.dataset.open)));
+  document.getElementById('nuovoProg')?.addEventListener('click', wizardNuovoProgetto);
+}
+
+function wizardNuovoProgetto(){
+  openModal('Nuovo progetto guidato', `
+    <p style="font-size:.76rem;color:var(--ink-2);margin-bottom:14px">Dimmi solo l\u2019essenziale: il Cervello imposterà fasi, check-list e scadenze in base al programma scelto.</p>
+    <div class="form-row"><label class="form-lbl">Titolo del progetto</label><input class="form-input" id="npTitolo" placeholder="Es.: Rifacimento illuminazione pubblica quartiere sud"/></div>
+    <div class="form-row"><label class="form-lbl">Programma di finanziamento</label>
+      <select class="form-select" id="npProg">${D.programmi.map(pr=>`<option value="${pr.id}">${pr.sigla} — ${pr.nome}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-lbl">Importo stimato (€)</label><input class="form-input" id="npImporto" type="number" placeholder="500000"/></div>
+  `, [
+    {lbl:'Annulla', fn:closeModal},
+    {lbl:'Crea progetto', cls:'btn-primary', icon:'sparkle', fn:()=>{
+      const titolo = document.getElementById('npTitolo').value.trim();
+      if(!titolo){ toast('Inserisci un titolo per il progetto','err'); return; }
+      const progId = document.getElementById('npProg').value;
+      const importo = parseInt(document.getElementById('npImporto').value)||0;
+      const cig = 'H'+Math.random().toString(36).slice(2,11).toUpperCase().slice(0,9);
+      const np = {id:newId('p'), titolo, programma:progId, cig, rup:'Elena Ferraro', importo, fase:0, amm:8, doc:5, norm:100, econ:0, rischio:'basso', scadenza:'—', scadenzaGiorni:60};
+      D.progetti.push(np);
+      D.docs[np.id] = [];
+      closeModal();
+      agentLog('dec','Nuovo progetto "'+titolo.slice(0,34)+'" creato: impostata check-list di Programmazione da knowledge '+prog(progId).sigla);
+      liveEvent('dec','Impostata la check-list iniziale per "'+titolo.slice(0,28)+'…"');
+      notify('dec','<b>Agente Decisionale</b> ha preparato la check-list di avvio per il nuovo progetto "<b>'+esc(titolo.slice(0,36))+'</b>"');
+      cervSystemMsg('Ho creato "'+titolo.slice(0,40)+'" e impostato la fase di Programmazione con la check-list ereditata dal programma '+prog(progId).sigla+'. Ti guiderò passo passo da qui.');
+      toast('Progetto creato — check-list di avvio pronta','ok');
+      openProgetto(np.id);
+      persist();
+    }},
+  ]);
+}
+/* ---------- DETTAGLIO PROGETTO ---------- */
+function openProgetto(id){
+  UI.progetto = id; UI.programma = null; UI.projTab = 'panoramica';
+  const p = proj(id);
+  document.getElementById('tbTitle').textContent = p.titolo.length>40?p.titolo.slice(0,40)+'…':p.titolo;
+  document.getElementById('tbSub').textContent = 'CIG '+p.cig+' · RUP '+p.rup;
+  setCervContext(p.titolo);
+  render();
+  window.scrollTo(0,0);
+}
+function twinCell(lbl,val){
+  const c = val>=80?'var(--ok)':val>=55?'var(--warn)':'var(--crit)';
+  return `<div class="card twin-cell"><div class="gauge"><div class="gauge-top"><span class="gauge-lbl">${lbl}</span><span class="gauge-val">${val}%</span></div><div class="gauge-track"><div class="gauge-fill" style="width:${val}%;background:${c}"></div></div></div></div>`;
+}
+function docChip(stato){
+  if(stato==='ok') return `<span class="chip chip-ok">${icon('check')} Completo</span>`;
+  if(stato==='mancante') return `<span class="chip chip-crit">${icon('alert')} Mancante</span>`;
+  return `<span class="chip chip-warn">${icon('clock')} In verifica</span>`;
+}
+function renderProgettoDettaglio(id){
+  const p = proj(id);
+  const pr = prog(p.programma);
+  const projFeed = D.feed.filter(f=>f.progetto===id && f.stato==='aperto');
+  const docs = D.docs[id]||[];
+  const rmap = {alto:['var(--crit)','Alto'], medio:['var(--warn)','Medio'], basso:['var(--ok)','Basso']};
+  const [rc,rl] = rmap[p.rischio];
+  return `
+  <button class="pd-back" data-back>${icon('arrowRight')} Torna indietro</button>
+  <div class="pd-head">
+    <div>
+      <span class="chip" style="background:${pr.colore}14;color:${pr.colore};border-color:${pr.colore}30">${pr.sigla}</span>
+      <div class="pd-title">${p.titolo}</div>
+      <div class="pd-meta">
+        <span class="pd-meta-item mono">CIG <b>${p.cig}</b></span>
+        <span class="pd-meta-item">RUP <b>${p.rup}</b></span>
+        <span class="pd-meta-item">Importo <b>€ ${p.importo.toLocaleString('it-IT')}</b></span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="pdGenAtto">${icon('pen')} Genera atto</button>
+      <button class="btn" id="pdUploadDoc">${icon('upload')} Carica documento</button>
+      <button class="btn btn-primary" id="pdAsk">${icon('brain')} Chiedi al Cervello</button>
+    </div>
+  </div>
+  <div class="twin-row">
+    ${twinCell('Amministrativo',p.amm)}${twinCell('Documentale',p.doc)}${twinCell('Normativo',p.norm)}${twinCell('Economico',p.econ)}
+    ${twinCell('Completezza',Math.round((p.amm+p.doc+p.norm+p.econ)/4))}
+    <div class="card twin-cell"><div class="gauge-lbl" style="margin-bottom:6px">Livello di rischio</div><span class="chip" style="background:${rc}14;color:${rc};border-color:${rc}40">${icon('alert')} ${rl}</span></div>
+  </div>
+  <div class="phase-rail"><div class="phase-track">
+    ${FASI.map((f,i)=>`<div class="phase-node ${i<p.fase?'done':i===p.fase?'current':''}" data-fase="${i}" title="${f}">
+      <div class="phase-line ${i<=p.fase?'done':''}"></div>
+      <div class="phase-dot">${i<p.fase?icon('check'):(i+1)}</div>
+      <div class="phase-lbl">${f}</div>
+    </div>`).join('')}
+  </div></div>
+  <div class="tabs">
+    ${['panoramica','documenti','rendicontazione','atti'].map(t=>`<button class="tab-btn ${UI.projTab===t?'active':''}" data-tab="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+  </div>
+  <div class="tabpanel ${UI.projTab==='panoramica'?'active':''}">
+    ${projFeed.length?`<div class="feed-list" style="margin-bottom:22px">${projFeed.map(renderFeedCard).join('')}</div>`:`<div class="card" style="padding:18px;color:var(--ink-3);font-size:.78rem;margin-bottom:22px">Nessuna segnalazione attiva: il Cervello non ha rilevato rischi o azioni pendenti su questo progetto.</div>`}
+    <div class="card" style="padding:18px">
+      <div class="side-card-h">${icon('clock')}<span class="side-card-title">Attività recenti sul progetto</span></div>
+      ${(D.attiGenerati.filter(a=>a.progetto===id).slice(0,3).map(a=>`<div class="log-row"><div class="log-dot" style="background:var(--ok)"></div><div><div class="log-txt"><b>${a.nome}</b> — firmato e protocollato</div><div class="log-time">${agoTxt(a.ts)}</div></div></div>`).join(''))||''}
+      <div class="log-row"><div class="log-dot"></div><div><div class="log-txt">Determina a contrarre firmata digitalmente</div><div class="log-time">2 giorni fa</div></div></div>
+      <div class="log-row"><div class="log-dot"></div><div><div class="log-txt"><b>Agente Documentale</b> ha classificato 4 nuovi allegati</div><div class="log-time">3 giorni fa</div></div></div>
+    </div>
+  </div>
+  <div class="tabpanel ${UI.projTab==='documenti'?'active':''}">
+    <div class="card" style="padding:6px 18px">
+      ${docs.length?docs.map(d=>`
+        <div class="doc-row">
+          <div class="doc-ic">${icon('file')}</div>
+          <div><div class="doc-name">${d.nome}</div><div class="doc-sub">${d.tipo}</div></div>
+          <div class="doc-status">${docChip(d.stato)}${d.stato==='mancante'?`<button class="btn btn-sm" data-caricadoc="${d.id}">${icon('upload')} Carica</button>`:''}</div>
+        </div>`).join(''):'<div style="padding:16px;color:var(--ink-3);font-size:.75rem">Nessun documento nel fascicolo. Usa "Carica documento" per iniziare.</div>'}
+    </div>
+  </div>
+  <div class="tabpanel ${UI.projTab==='rendicontazione'?'active':''}">
+    <div class="card" style="padding:18px">
+      <table class="sal-table">
+        <tr><th>SAL</th><th>Importo</th><th>Ammissibilità</th><th>Esito Agente Rendicontazione</th></tr>
+        <tr><td><b>SAL 1</b></td><td>€ ${(p.importo*0.3).toLocaleString('it-IT',{maximumFractionDigits:0})}</td><td><span class="chip chip-ok">Ammesso</span></td><td>Nessuna anomalia</td></tr>
+        <tr><td><b>SAL 2</b></td><td>€ ${(p.importo*0.35).toLocaleString('it-IT',{maximumFractionDigits:0})}</td><td>${(docs.some(d=>d.stato==='mancante'))?'<span class="chip chip-warn">In verifica</span>':'<span class="chip chip-ok">Ammesso</span>'}</td><td>${(docs.some(d=>d.stato==='mancante'))?'Giustificativi mancanti':'Regolarizzato'}</td></tr>
+        <tr><td><b>SAL 3</b></td><td>€ ${(p.importo*0.35).toLocaleString('it-IT',{maximumFractionDigits:0})}</td><td><span class="chip chip-neutral">Non ancora dovuto</span></td><td>—</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="tabpanel ${UI.projTab==='atti'?'active':''}">
+    <div class="card" style="padding:6px 18px">
+      ${D.attiGenerati.filter(a=>a.progetto===id).length?D.attiGenerati.filter(a=>a.progetto===id).map(a=>`
+        <div class="doc-row">
+          <div class="doc-ic" style="background:var(--ai-soft);color:var(--ai-2)">${icon('pen')}</div>
+          <div><div class="doc-name">${a.nome}</div><div class="doc-sub">${a.tipo} · generato dal Cervello · ${agoTxt(a.ts)}</div></div>
+          <div class="doc-status"><span class="chip chip-ok">${icon('check')} Protocollato</span></div>
+        </div>`).join(''):'<div style="padding:16px;color:var(--ink-3);font-size:.75rem">Nessun atto generato per questo progetto. Usa "Genera atto" qui sopra: il Cervello lo comporrà sul template ufficiale del programma.</div>'}
+    </div>
+  </div>`;
+}
+function bindProgettoDettaglio(){
+  document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>{ UI.progetto=null; nav(UI.page); }));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{ UI.projTab=b.dataset.tab; render(); }));
+  bindFeedCards();
+  const pid = UI.progetto;
+  document.getElementById('pdAsk')?.addEventListener('click', openCervello);
+  document.getElementById('pdGenAtto')?.addEventListener('click', ()=>apriGeneraAtto(pid));
+  document.getElementById('pdUploadDoc')?.addEventListener('click', ()=>caricaDocFascicolo(pid, null));
+  document.querySelectorAll('[data-caricadoc]').forEach(b=>b.addEventListener('click',()=>caricaDocFascicolo(pid, b.dataset.caricadoc)));
+  document.querySelectorAll('.phase-node').forEach(n=>n.addEventListener('click',()=>{
+    const i = parseInt(n.dataset.fase);
+    const p = proj(pid);
+    if(i===p.fase+1){
+      openModal('Avanzamento di fase', `<p style="font-size:.78rem;color:var(--ink-2)">Vuoi far avanzare il progetto alla fase <b>${FASI[i]}</b>? Il Cervello verificherà la check-list di uscita della fase attuale (<b>${FASI[p.fase]}</b>) prima di confermare.</p>`, [
+        {lbl:'Annulla', fn:closeModal},
+        {lbl:'Verifica e avanza', cls:'btn-primary', icon:'check', fn:()=>{
+          closeModal();
+          p.fase = i; p.amm = Math.min(100,p.amm+5);
+          agentLog('dec','Progetto "'+p.titolo.slice(0,30)+'…" avanzato alla fase '+FASI[i]+': check-list di uscita verificata');
+          liveEvent('dec','"'+p.titolo.slice(0,26)+'…" avanzato a '+FASI[i]);
+          notify('dec','<b>Agente Decisionale</b> — progetto avanzato alla fase <b>'+FASI[i]+'</b>; nuova check-list attivata');
+          toast('Fase avanzata a '+FASI[i],'ok');
+          render(); persist();
+        }},
+      ]);
+    } else if(i>p.fase+1){
+      toast('Puoi avanzare solo di una fase alla volta','err');
+    }
+  }));
+}
+
+function caricaDocFascicolo(pid, docId){
+  const p = proj(pid);
+  openModal('Carica documento nel fascicolo', `
+    <div class="dropzone" id="fascDrop">${icon('upload')}<div class="dz-title">Trascina qui il documento, o clicca per selezionarlo</div><div class="dz-sub">L\u2019Agente Documentale lo classificherà e collegherà automaticamente</div></div>
+    <div id="fascScan"></div>
+  `, [{lbl:'Annulla', fn:closeModal}]);
+  const drop = document.getElementById('fascDrop');
+  const fi = document.getElementById('fileInput');
+  const handle = (files)=>{
+    const nome = files && files[0] ? files[0].name.replace(/\.[^.]+$/,'') : 'Documento caricato';
+    drop.style.display = 'none';
+    document.getElementById('fascScan').innerHTML = `<div class="scan-box"><div class="scan-spinner"></div><div class="scan-txt"><b>${esc(nome)}</b><br><span style="color:var(--ink-3);font-size:.68rem">Classificazione automatica in corso…</span></div></div>`;
+    setTimeout(()=>{
+      closeModal();
+      if(docId){
+        const d = (D.docs[pid]||[]).find(x=>x.id===docId);
+        if(d) d.stato='ok';
+      } else {
+        if(!D.docs[pid]) D.docs[pid]=[];
+        D.docs[pid].push({id:newId('d'), nome, tipo:'Allegato', stato:'ok'});
+      }
+      p.doc = Math.min(100, p.doc+6);
+      agentLog('doc','Classificato e collegato "'+nome.slice(0,36)+'" al fascicolo di "'+p.titolo.slice(0,26)+'…"');
+      liveEvent('doc','"'+nome.slice(0,30)+'" collegato al fascicolo');
+      toast('Documento classificato e collegato al fascicolo','ok');
+      UI.projTab='documenti'; render(); persist();
+    }, 1900);
+  };
+  drop.addEventListener('click', ()=>{ fi.value=''; fi.onchange=()=>handle(fi.files); fi.click(); });
+  drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('over');});
+  drop.addEventListener('dragleave', ()=>drop.classList.remove('over'));
+  drop.addEventListener('drop', e=>{e.preventDefault();handle(e.dataTransfer.files);});
+}
+
+/* ---------- PROGRAMMI ---------- */
+function renderProgrammi(){
+  return `
+  <div class="view-head">
+    <div><div class="view-h1">Programmi</div><div class="view-p">Il Knowledge Engine: ogni programma ha una base di conoscenza interrogabile, costruita automaticamente dai documenti che carichi.</div></div>
+    <button class="btn btn-primary" id="progUpload">${icon('upload')} Carica nuova fonte</button>
+  </div>
+  <div class="prog-grid">${D.programmi.map(pr=>{
+    const docs = D.kdocs[pr.id]||[];
+    return `<div class="card progcard" data-open="${pr.id}">
+      <div class="progcard-badge" style="background:${pr.colore}">${pr.sigla.slice(0,4)}</div>
+      <div class="progcard-name">${pr.sigla}</div>
+      <div class="progcard-full">${pr.nome}</div>
+      <div class="progcard-stats">
+        <div class="progcard-stat"><b>${docs.length}</b><span>Documenti</span></div>
+        <div class="progcard-stat"><b>${pr.regole}</b><span>Regole estratte</span></div>
+        <div class="progcard-stat"><b>${D.progetti.filter(p=>p.programma===pr.id).length}</b><span>Progetti</span></div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function bindProgrammi(){
+  document.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openProgramma(b.dataset.open)));
+  document.getElementById('progUpload')?.addEventListener('click', ()=>apriUploadConoscenza(null));
+}
+function openProgramma(id){
+  UI.programma = id; UI.progetto = null;
+  const pr = prog(id);
+  document.getElementById('tbTitle').textContent = pr.sigla;
+  document.getElementById('tbSub').textContent = pr.nome;
+  setCervContext(pr.sigla+' — Knowledge Engine');
+  render();
+  window.scrollTo(0,0);
+}
+function renderProgrammaDettaglio(id){
+  const pr = prog(id);
+  const docs = D.kdocs[id]||[];
+  const steps = ['Caricato','Segmentato','Regole estratte','Collegato al grafo'];
+  return `
+  <button class="pd-back" data-back>${icon('arrowRight')} Torna a Programmi</button>
+  <div class="pd-head">
+    <div>
+      <div class="progcard-badge" style="background:${pr.colore};margin-bottom:10px">${pr.sigla.slice(0,4)}</div>
+      <div class="pd-title">${pr.nome}</div>
+      <div class="pd-meta">
+        <span class="pd-meta-item"><b>${docs.length}</b> documenti indicizzati</span>
+        <span class="pd-meta-item"><b>${pr.regole}</b> regole estratte</span>
+        <span class="pd-meta-item"><b>${D.progetti.filter(p=>p.programma===id).length}</b> progetti collegati</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="kUploadBtn">${icon('upload')} Carica documento</button>
+  </div>
+  <div class="dropzone" id="kInlineDrop">${icon('upload')}<div class="dz-title">Trascina qui manuali operativi, circolari, FAQ, linee guida</div><div class="dz-sub">Il Cervello li interpreterà e i progetti ${pr.sigla} erediteranno subito le nuove regole</div></div>
+  <div class="card" style="padding:6px 18px">
+    ${docs.length?docs.map(d=>`
+      <div class="kdoc-row">
+        <div class="kdoc-ic">${icon(d.step<4?'sparkle':'book')}</div>
+        <div><div class="kdoc-name">${esc(d.nome)}</div><div class="kdoc-sub">${d.tipo}${d.regole?` · <b style="color:var(--ok)">${d.regole} regole estratte</b>`:''}</div></div>
+        <div class="kdoc-pipeline">
+          <div class="pipeline">${steps.map((s,i)=>`<div class="pipeline-step ${i<d.step?'on':(i===d.step&&d.step<4?'working':'')}" title="${s}"></div>`).join('')}</div>
+          <div class="kdoc-pipeline-lbl">${d.step>=4?'Attivo nel Cervello':steps[Math.min(d.step,3)]+'…'}</div>
+        </div>
+      </div>`).join(''):'<div style="padding:16px;color:var(--ink-3);font-size:.75rem">Nessuna fonte caricata. Trascina qui il primo manuale operativo per dare conoscenza al Cervello su questo programma.</div>'}
+  </div>`;
+}
+function bindProgrammaDettaglio(){
+  document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>{ UI.programma=null; nav('programmi'); }));
+  const id = UI.programma;
+  document.getElementById('kUploadBtn')?.addEventListener('click', ()=>apriUploadConoscenza(id));
+  const drop = document.getElementById('kInlineDrop');
+  const fi = document.getElementById('fileInput');
+  if(drop){
+    drop.addEventListener('click', ()=>{ fi.value=''; fi.onchange=()=>{ Array.from(fi.files).forEach((f,i)=>setTimeout(()=>ingestDocument(id,f), i*600)); }; fi.click(); });
+    drop.addEventListener('dragover', e=>{e.preventDefault();drop.classList.add('over');});
+    drop.addEventListener('dragleave', ()=>drop.classList.remove('over'));
+    drop.addEventListener('drop', e=>{ e.preventDefault(); Array.from(e.dataTransfer.files).forEach((f,i)=>setTimeout(()=>ingestDocument(id,f), i*600)); });
+  }
+}
+
+/* ---------- AGENTI ---------- */
+function renderAgenti(){
+  return `
+  <div class="view-head">
+    <div><div class="view-h1">Agenti AI</div><div class="view-p">Otto specialisti sempre attivi. Apri il registro di ciascuno per vedere cosa ha fatto, o lancia una verifica manuale quando vuoi.</div></div>
+  </div>
+  <div class="agent-grid">${D.agenti.map(a=>{
+    const log = (D.agentLog[a.id]||[]).slice(0,8);
+    const open = UI.agentLogOpen[a.id];
+    return `<div class="card agentcard">
+      <div class="agentcard-top">
+        <div class="agentcard-ic" data-agent-ic="${a.id}" style="background:${a.colore}14;color:${a.colore}">${icon(a.icon)}</div>
+        <div style="flex:1">
+          <div class="agentcard-name">${a.nome} <span class="agentcard-status-dot" data-agent-dot="${a.id}"></span></div>
+          <div class="agentcard-role">${a.ruolo}</div>
+        </div>
+      </div>
+      <div class="agentcard-stats">
+        <div class="agentcard-stat"><b>${a.verifiche}</b><span>Verifiche oggi</span></div>
+        <div class="agentcard-stat"><b>${a.pendenti}</b><span>Da rivedere</span></div>
+      </div>
+      <div class="agentcard-log ${open?'open':''}" id="alog-${a.id}">
+        ${log.map(l=>`<div class="agent-log-row"><span class="agent-log-time">${fmtTime(l.ts)}</span><span>${l.txt}</span></div>`).join('')||'<div class="agent-log-row"><span>Nessuna attività registrata oggi.</span></div>'}
+      </div>
+      <div class="agentcard-foot">
+        <button class="btn btn-sm" data-agent-toggle="${a.id}">${open?'Nascondi registro':'Registro attività'}</button>
+        <button class="btn btn-sm btn-ai" data-agent-run="${a.id}">${icon('play')} Esegui verifica ora</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function bindAgenti(){
+  document.querySelectorAll('[data-agent-toggle]').forEach(b=>b.addEventListener('click',()=>{
+    const id = b.dataset.agentToggle;
+    UI.agentLogOpen[id] = !UI.agentLogOpen[id];
+    render();
+  }));
+  document.querySelectorAll('[data-agent-run]').forEach(b=>b.addEventListener('click',()=>runAgentNow(b.dataset.agentRun)));
+}
+
+/* ---------- ARCHIVIO ---------- */
+function renderArchivio(){
+  const rows = [];
+  Object.entries(D.docs).forEach(([pid,docs])=>{
+    const p = proj(pid);
+    if(!p) return;
+    docs.forEach(d=>rows.push({nome:d.nome, sub:d.tipo+' · '+p.titolo.slice(0,34)+'…', stato:d.stato, pid}));
+  });
+  D.attiGenerati.forEach(a=>{
+    const p = proj(a.progetto);
+    rows.push({nome:a.nome, sub:'Atto generato dal Cervello'+(p?' · '+p.titolo.slice(0,26)+'…':''), stato:'ok', pid:a.progetto, gen:true});
+  });
+  return `
+  <div class="view-head">
+    <div><div class="view-h1">Archivio Documenti</div><div class="view-p">Tutti i documenti sono già letti, classificati e collegati dal Cervello.</div></div>
+    <div class="searchbox" style="max-width:320px">${icon('search')}<input id="archSearch" placeholder="Cerca nell\u2019archivio…"/></div>
+  </div>
+  <div class="card" style="padding:6px 18px" id="archList">
+    ${rows.map(r=>`
+      <div class="doc-row arch-row" data-nome="${esc(r.nome.toLowerCase())}">
+        <div class="doc-ic" ${r.gen?'style="background:var(--ai-soft);color:var(--ai-2)"':''}>${icon(r.gen?'pen':'file')}</div>
+        <div><div class="doc-name">${esc(r.nome)}</div><div class="doc-sub">${r.sub}</div></div>
+        <div class="doc-status">${docChip(r.stato)}<button class="btn btn-sm" data-goproj="${r.pid}">Apri fascicolo</button></div>
+      </div>`).join('')}
+  </div>`;
+}
+function bindArchivio(){
+  document.querySelectorAll('[data-goproj]').forEach(b=>b.addEventListener('click',()=>openProgetto(b.dataset.goproj)));
+  const s = document.getElementById('archSearch');
+  s?.addEventListener('input', ()=>{
+    const q = s.value.toLowerCase();
+    document.querySelectorAll('.arch-row').forEach(r=>{
+      r.style.display = r.dataset.nome.includes(q)?'':'none';
+    });
+  });
+}
+/* ════════════════════════════════════════════════════════════════
+   NOTIFICHE UI
+   ════════════════════════════════════════════════════════════════ */
+function toggleNotif(){
+  const p = document.getElementById('notifPanel');
+  const willOpen = !p.classList.contains('open');
+  p.classList.toggle('open');
+  if(willOpen){
+    document.getElementById('notifList').innerHTML = D.notifiche.length?D.notifiche.map(n=>{
+      const a = agente(n.agente);
+      return `<div class="notif-item ${n.letto?'':'unread'}" data-nid="${n.id}">
+        <div class="notif-ic" style="background:${a?a.colore+'14':'var(--surface-3)'};color:${a?a.colore:'var(--ink-3)'}">${icon(a?a.icon:'bell')}</div>
+        <div><div class="notif-txt">${n.txt}</div><div class="notif-time">${agoTxt(n.ts)}</div></div>
+      </div>`;
+    }).join(''):'<div class="notif-empty">Nessuna notifica. Gli agenti ti avviseranno qui.</div>';
+    document.querySelectorAll('[data-nid]').forEach(el=>el.addEventListener('click',()=>{
+      const n = byId(D.notifiche, el.dataset.nid);
+      if(n){ n.letto = true; el.classList.remove('unread'); updateBellBadge(); persist(); }
+    }));
+  }
+}
+function closeNotif(){ document.getElementById('notifPanel').classList.remove('open'); }
+function markAllRead(){
+  D.notifiche.forEach(n=>n.letto=true);
+  updateBellBadge();
+  document.querySelectorAll('.notif-item').forEach(el=>el.classList.remove('unread'));
+  persist();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ALERTLINE
+   ════════════════════════════════════════════════════════════════ */
+function updateAlertline(){
+  const el = document.getElementById('alertline');
+  const worst = D.progetti.filter(p=>p.rischio==='alto').sort((a,b)=>a.scadenzaGiorni-b.scadenzaGiorni)[0];
+  if(worst && worst.scadenzaGiorni<=5){
+    el.classList.add('show');
+    document.getElementById('alertlineIco').innerHTML = icon('alert');
+    document.getElementById('alertlineTxt').innerHTML = `<b>${worst.titolo.slice(0,52)}${worst.titolo.length>52?'…':''}</b> — rischio alto con scadenza tra ${worst.scadenzaGiorni} giorni.`;
+    const btn = document.getElementById('alertlineBtn');
+    btn.onclick = ()=>openProgetto(worst.id);
+  } else {
+    el.classList.remove('show');
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   IL CERVELLO
+   ════════════════════════════════════════════════════════════════ */
+const CERV_SUGGESTIONS = [
+  'Cosa devo fare oggi con priorità?',
+  'Perché il progetto Rodari è a rischio?',
+  'Che regole hai imparato dagli ultimi documenti?',
+  'Genera la determina di liquidazione',
+  'Ci sono clausole non conformi in corso?',
+];
+function setCervContext(name){
+  UI.cervContext = name;
+  const el = document.getElementById('cervContextName');
+  if(el) el.textContent = name;
+}
+function openCervello(){
+  UI.cervelloOpen = true;
+  document.getElementById('cervello').classList.add('open');
+  document.getElementById('main').classList.add('shift');
+  document.getElementById('tbCervelloBtn').classList.add('on');
+  if(window.innerWidth<=980) document.getElementById('cervelloScrim').classList.add('show');
+  renderCervThread();
+  setTimeout(()=>document.getElementById('cervInput')?.focus(), 200);
+}
+function closeCervello(){
+  UI.cervelloOpen = false;
+  document.getElementById('cervello').classList.remove('open');
+  document.getElementById('main').classList.remove('shift');
+  document.getElementById('tbCervelloBtn').classList.remove('on');
+  document.getElementById('cervelloScrim').classList.remove('show');
+}
+function toggleCervello(){ UI.cervelloOpen ? closeCervello() : openCervello(); }
+
+function renderCervThread(){
+  const t = document.getElementById('cervThread');
+  t.innerHTML = D.cervHistory.map(m=>`
+    <div class="cmsg ${m.role==='ai'?'cmsg-ai':'cmsg-user'}">
+      <div class="cmsg-ava ${m.role==='ai'?'ai':'user'}">${m.role==='ai'?icon('brain'):'EF'}</div>
+      <div class="cmsg-bubble">
+        ${m.text.split('\n').map(p=>`<p>${p}</p>`).join('')}
+        ${m.cite?`<div class="cmsg-cites"><span class="cite-chip">${icon('file')} ${m.cite}</span></div>`:''}
+      </div>
+    </div>`).join('');
+  const sug = document.getElementById('cervSuggestRow');
+  sug.innerHTML = CERV_SUGGESTIONS.map(s=>`<button class="cerv-sugg-btn" data-sugg="${esc(s)}">${s}</button>`).join('');
+  sug.querySelectorAll('[data-sugg]').forEach(b=>b.addEventListener('click', ()=>sendCervello(b.dataset.sugg)));
+  t.scrollTop = t.scrollHeight;
+}
+
+function cervSystemMsg(text){
+  D.cervHistory.push({role:'ai', text});
+  if(UI.cervelloOpen) renderCervThread();
+  persist();
+}
+
+function cervReply(question){
+  const q = question.toLowerCase();
+  if(q.includes('rodari') || q.includes('rischio')){
+    const p = proj('p2');
+    return {text:'Il progetto "Riqualificazione energetica scuola Rodari" è a rischio '+p.rischio+'. '+(p.rischio==='alto'?'Il SAL 2 non è ancora stato caricato e l\u2019art.14 del disciplinare non è allineato al correttivo 2025.':'Ho già applicato le correzioni: il SAL è stato regolarizzato e la clausola aggiornata.')+' Ti consiglio di monitorare la milestone di luglio nei prossimi giorni.', cite:'Fonte: Pista di controllo FESR §3.2 — D.Lgs. 36/2023 art. 119'};
+  }
+  if(q.includes('oggi') || q.includes('priorità')){
+    const aperti = D.feed.filter(f=>f.stato==='aperto').slice(0,3);
+    if(!aperti.length) return {text:'Non ci sono azioni urgenti al momento: tutto è sotto controllo. Continuo a monitorare rischi e scadenze in background.', cite:null};
+    return {text:'Le priorità di oggi, in ordine di impatto:\n'+aperti.map((f,i)=>(i+1)+'. '+f.titolo).join('\n'), cite:null};
+  }
+  if(q.includes('regole') || q.includes('imparato') || q.includes('documenti')){
+    const ultimi = Object.entries(D.kdocs).flatMap(([pid,docs])=>docs.map(d=>({...d,prog:pid}))).sort((a,b)=>0).slice(-3);
+    const totRegole = D.programmi.reduce((s,p)=>s+p.regole,0);
+    return {text:'Ho indicizzato in totale '+totRegole+' regole operative su '+D.programmi.length+' programmi. Le più recenti derivano dagli ultimi documenti caricati: le sto già applicando nei controlli automatici degli agenti.', cite:null};
+  }
+  if(q.includes('determina') || q.includes('liquidazione')){
+    return {text:'Ho preparato la bozza della determina di liquidazione per il SAL 1 di "Cooperazione transfrontaliera turismo lento", usando il template Interreg e i giustificativi già verificati come ammissibili. La trovi tra le automazioni proposte nella pagina Oggi, pronta per la tua firma.', cite:'Fonte: Programme Manual Interreg IT-CH, allegato 6'};
+  }
+  if(q.includes('clausol') || q.includes('conform')){
+    const aperte = D.feed.filter(f=>f.stato==='aperto' && f.agente==='norm');
+    if(!aperte.length) return {text:'Al momento non ho non conformità aperte sui 7 progetti attivi: tutte le clausole sono allineate al D.Lgs. 36/2023 e ai correttivi vigenti.', cite:null};
+    return {text:'Ho trovato una non conformità attiva: nel disciplinare di "Rodari" la soglia di subappalto all\u2019art.14 cita il testo pre-correttivo. Nessun\u2019altra clausola risulta disallineata sui progetti attivi.', cite:'Fonte: D.Lgs. 36/2023, correttivo 2025 — art. 119'};
+  }
+  return {text:'Ho verificato il contesto disponibile: al momento non ho un riscontro diretto su questo, ma posso incrociare normativa, manuali di programma e lo stato dei tuoi progetti se mi dai qualche dettaglio in più — ad esempio il nome del progetto o il programma di riferimento.', cite:null};
+}
+
+function sendCervello(text){
+  const val = (text||'').trim();
+  if(!val) return;
+  D.cervHistory.push({role:'user', text:val});
+  renderCervThread();
+  const t = document.getElementById('cervThread');
+  const typingEl = document.createElement('div');
+  typingEl.className = 'cmsg cmsg-ai';
+  typingEl.innerHTML = `<div class="cmsg-ava ai">${icon('brain')}</div><div class="cmsg-bubble cerv-typing"><span></span><span></span><span></span></div>`;
+  t.appendChild(typingEl);
+  t.scrollTop = t.scrollHeight;
+  setTimeout(()=>{
+    const r = cervReply(val);
+    D.cervHistory.push({role:'ai', text:r.text, cite:r.cite});
+    renderCervThread();
+    persist();
+  }, 850);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════════════ */
+function buildRailNav(){
+  const el = document.getElementById('railNav');
+  el.innerHTML = NAV_ITEMS.map(it => `
+    <button class="rail-item" data-page="${it.id}" title="${it.label}">
+      ${icon(it.icon)}<span>${it.label}</span>
+    </button>`).join('');
+  el.querySelectorAll('.rail-item').forEach(b => b.addEventListener('click', () => nav(b.dataset.page)));
+  document.getElementById('railSettings').innerHTML = icon('settings');
+  document.getElementById('railSettings').addEventListener('click', () => toast('Impostazioni — in arrivo','info'));
+  document.getElementById('railMark').innerHTML = icon('brain');
+}
+function buildTabbar(){
+  const el = document.getElementById('tabbar');
+  el.innerHTML = NAV_ITEMS.slice(0,5).map(it => `
+    <button class="tab-item" data-page="${it.id}">${icon(it.icon)}<span>${it.label}</span></button>`).join('');
+  el.querySelectorAll('.tab-item').forEach(b => b.addEventListener('click', () => nav(b.dataset.page)));
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('tbAsk').innerHTML = `${icon('search')}<span>Chiedi al Cervello…</span><kbd>⌘K</kbd>`;
+  document.getElementById('tbBell').innerHTML = `${icon('bell')}<span class="tb-badge" id="bellBadge">0</span>`;
+  document.getElementById('cervMark').innerHTML = icon('brain');
+  document.getElementById('cervClose').innerHTML = icon('x');
+  document.getElementById('cervSend').innerHTML = icon('send');
+  document.getElementById('cervContextIco').innerHTML = icon('folder');
+  document.getElementById('modalX').innerHTML = icon('x');
+  document.getElementById('fabCervello').innerHTML = icon('brain');
+
+  const saved = await Store.load();
+  if(saved){ D = saved; toast('Sessione precedente ripristinata','ok'); }
+
+  buildRailNav();
+  buildTabbar();
+  nav('oggi');
+  updateBellBadge();
+  updateAlertline();
+  startAgentEngine();
+
+  document.getElementById('tbCervelloBtn').addEventListener('click', toggleCervello);
+  document.getElementById('tbAsk').addEventListener('click', openCervello);
+  document.getElementById('cervClose').addEventListener('click', closeCervello);
+  document.getElementById('cervelloScrim').addEventListener('click', closeCervello);
+  document.getElementById('fabCervello').addEventListener('click', openCervello);
+  document.getElementById('tbBell').addEventListener('click', (e)=>{ e.stopPropagation(); toggleNotif(); });
+  document.getElementById('notifClear').addEventListener('click', markAllRead);
+  document.addEventListener('click', (e)=>{
+    const panel = document.getElementById('notifPanel');
+    if(panel.classList.contains('open') && !panel.contains(e.target) && e.target.id!=='tbBell' && !e.target.closest('#tbBell')) closeNotif();
+  });
+  document.getElementById('modalX').addEventListener('click', closeModal);
+  document.getElementById('modalScrim').addEventListener('click', (e)=>{ if(e.target.id==='modalScrim') closeModal(); });
+
+  const input = document.getElementById('cervInput');
+  document.getElementById('cervSend').addEventListener('click', ()=>{ sendCervello(input.value); input.value=''; input.style.height='auto'; });
+  input.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendCervello(input.value); input.value=''; input.style.height='auto'; }
+  });
+  input.addEventListener('input', ()=>{ input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,90)+'px'; });
+
+  document.addEventListener('keydown', (e)=>{
+    if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); openCervello(); }
+    if(e.key==='Escape'){ if(UI.cervelloOpen) closeCervello(); closeNotif(); closeModal(); }
+  });
+
+  setTimeout(()=>toast('Cervello sincronizzato — '+D.programmi.reduce((s,p)=>s+p.regole,0)+' regole attive','ok'), 600);
+});
+</script>
+</body>
+</html>
